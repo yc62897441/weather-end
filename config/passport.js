@@ -16,6 +16,10 @@ const strategy = new JwtStrategy(jwtOptions, function (jwt_payload, next) {
       if (!user) {
         return next(null, false)
       }
+      user = {
+        id: user.id,
+        account: user.account
+      }
       return next(null, user)
     })
 })
