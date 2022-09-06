@@ -6,8 +6,12 @@ const bcrypt = require('bcryptjs')
 const db = require('../models')
 const User = db.User
 
+// signin 簽發 token
 const jwt = require('jsonwebtoken')
 const JWT_SECRET = 'secret'
+// 進入其他需驗證路由的驗證
+const passport = require('../config/passport')
+const authenticated = passport.authenticate('jwt', { session: false })
 
 module.exports = (app) => {
   app.get('/api/test', async (req, res) => {
