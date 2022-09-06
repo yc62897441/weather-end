@@ -6,6 +6,9 @@ const bcrypt = require('bcryptjs')
 const db = require('../models')
 const User = db.User
 
+const jwt = require('jsonwebtoken')
+const JWT_SECRET = 'secret'
+
 module.exports = (app) => {
   app.get('/api/test', async (req, res) => {
     try {
@@ -46,6 +49,39 @@ module.exports = (app) => {
       })
       .catch(error => {
         console.warn(error)
+      })
+  })
+
+  app.post('/api/users/signin', (req, res) => {
+    // 取得前端表單資料
+    const { account, password } = req.body
+    if (!account || !password) {
+      return res.json({ ststus: 'error', message: '請輸入 account 與 password' })
+    }
+
+    User.findOne({ where: { account: account } })
+      .then(user => {
+        if (!user) {
+          return res.json({ ststus: 'error', message: '不存在此 account' })
+        }
+        if (!bcrypt.compareSync(password, user.password)) {
+          return res.status(401).json({ ststus: 'error', message: '密碼錯誤' })
+        }
+
+        // 簽發token
+        const payload = { id: user.id }
+        const token = jwt.sign(payload, JWT_SECRET)
+
+        // 回傳訊息、token、user data
+        return res.json({
+          status: 'success',
+          message: '登入驗證成功',
+          token: token,
+          user: user
+        })
+      })
+      .catch(error => {
+        console.log(error)
       })
   })
 }
