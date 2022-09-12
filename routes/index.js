@@ -5,6 +5,7 @@ let CWBbaseURL = 'https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/'
 const bcrypt = require('bcryptjs')
 const db = require('../models')
 const User = db.User
+const UserSave = db.UserSave
 
 // signin 簽發 token
 const jwt = require('jsonwebtoken')
@@ -96,5 +97,38 @@ module.exports = (app) => {
       id: req.user.id,
       account: req.user.account,
     })
+  })
+
+  app.post('/api/users/addToUserSave', authenticated, (req, res) => {
+    UserSave.create({
+      UserId: req.user.id,
+      MountainId: req.body.MountainId
+    })
+      .then(() => {
+        return res.json({ status: 'success' })
+      })
+      .catch(error => {
+        console.log(error)
+        return res.status(505).json({ status: 'error' })
+      })
+  })
+
+  app.post('/api/users/removeFromUserSave', authenticated, (req, res) => {
+    UserSave.findOne({
+      where: {
+        UserId: req.user.id,
+        MountainId: req.body.MountainId
+      }
+    })
+      .then(userSave => {
+        userSave.destroy()
+          .then(() => {
+            return res.json({ status: 'success' })
+          })
+      })
+      .catch(error => {
+        console.log(error)
+        return res.status(505).json({ status: 'error' })
+      })
   })
 }
