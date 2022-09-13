@@ -99,6 +99,18 @@ module.exports = (app) => {
     })
   })
 
+  app.get('/api/users/userSave', authenticated, (req, res) => {
+    const userId = req.user.id
+    UserSave.findAll({ where: { UserId: userId }})
+    .then(userSaves => {
+      return res.json({ status: 'success', userSaves: userSaves })
+    })
+    .catch(error => {
+      console.log(error)
+      return res.status(505).json({ status: 'error' })
+    })
+  })
+
   app.post('/api/users/addToUserSave', authenticated, (req, res) => {
     UserSave.create({
       UserId: req.user.id,
