@@ -61,16 +61,16 @@ module.exports = (app) => {
     // 取得前端表單資料
     const { account, password } = req.body
     if (!account || !password) {
-      return res.json({ ststus: 'error', message: '請輸入 account 與 password' })
+      return res.json({ status: 'error', message: '請輸入 account 與 password' })
     }
 
     User.findOne({ where: { account: account } })
       .then(user => {
         if (!user) {
-          return res.json({ ststus: 'error', message: '不存在此 account' })
+          return res.json({ status: 'error', message: '不存在此 account' })
         }
         if (!bcrypt.compareSync(password, user.password)) {
-          return res.status(401).json({ ststus: 'error', message: '密碼錯誤' })
+          return res.status(401).json({ status: 'error', message: '密碼錯誤' })
         }
 
         // 簽發token
