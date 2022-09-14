@@ -14,8 +14,41 @@ const JWT_SECRET = 'secret'
 const passport = require('../config/passport')
 const authenticated = passport.authenticate('jwt', { session: false })
 
+// 定時撈取資料，並發送 Line 訊息
+// Line notify axios
+const instance = axios.create({
+  baseURL: 'https://notify-api.line.me/api/notify',
+  timeout: 1000,
+  headers: {
+    Authorization: `Bearer Z2XyFIdXsSVaVg4z3DvRlQJ5KKjtzhdjPhv2SAa6Jyu`,
+    "Content-Type": "multipart/form-data"
+  },
+})
+// 定時器
+const clock = setInterval(fetchDataAndNotify, 5000);
+async function fetchDataAndNotify() {
+  try {
+    // 抓取中央氣象局資料
+    let requestURL = `${CWBbaseURL}F-B0053-035?Authorization=${CWBAuthorization}&format=JSON`
+    const response = await axios.get(requestURL)
+
+    // 判斷選定通知的地點的天氣條件，並發送 Line notify 訊息
+    if (Number(response.data.cwbopendata.dataset.locations.location[0].weatherElement[3].time[0].elementValue.value) >= 50) {
+      let locationName = response.data.cwbopendata.dataset.locations.location[0].locationName
+      let message = `${locationName} 近6小時降雨機率 >= 50%，降雨機率: ${Number(response.data.cwbopendata.dataset.locations.location[0].weatherElement[3].time[0].elementValue.value)}%`
+      const response2 = await instance.post('/', { message: message })
+    } else {
+      let locationName = response.data.cwbopendata.dataset.locations.location[0].locationName
+      let message = `${locationName} 近6小時降雨機率 < 50%，降雨機率: ${Number(response.data.cwbopendata.dataset.locations.location[0].weatherElement[3].time[0].elementValue.value)}%`
+      const response2 = await instance.post('/', { message: message })
+    }
+  } catch (error) {
+    console.warn(error)
+  }
+}
+
 module.exports = (app) => {
-  app.get('/api/test', async (req, res) => {
+  app.get('/api/weather_data', async (req, res) => {
     try {
       let requestURL = `${CWBbaseURL}${req.query.dataCategory}?Authorization=${CWBAuthorization}&format=${req.query.dataType}`
       const response = await axios.get(requestURL)
