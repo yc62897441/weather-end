@@ -22,10 +22,11 @@ module.exports = (app) => {
       if (response.status === 200) {
         return res.json({ status: 'success', message: 'test ok', dataset: { ...response.data.cwbopendata.dataset } })
       } else {
-        return res.status(401).json({ status: 'error', message: '無法取得氣象資料' })
+        return res.status.json({ status: 'error', message: '無法取得氣象資料' })
       }
     } catch (error) {
       console.warn(error)
+      return res.json({ status: 'error', message: '伺服器內部問題' })
     }
   })
 
@@ -35,7 +36,7 @@ module.exports = (app) => {
 
     // 表單資料有缺漏，或是password, checkPassword 不一致時，return
     if (!account || !password) {
-      return res.status(401).json({ status: 'error', message: 'account, password 資料缺漏' })
+      return res.status.json({ status: 'error', message: 'account, password 資料缺漏' })
     }
 
     User.findOne({ where: { account: account } })
@@ -54,6 +55,7 @@ module.exports = (app) => {
       })
       .catch(error => {
         console.warn(error)
+        return res.json({ status: 'error', message: '伺服器內部問題' })
       })
   })
 
@@ -70,7 +72,7 @@ module.exports = (app) => {
           return res.json({ status: 'error', message: '不存在此 account' })
         }
         if (!bcrypt.compareSync(password, user.password)) {
-          return res.status(401).json({ status: 'error', message: '密碼錯誤' })
+          return res.json({ status: 'error', message: '密碼錯誤' })
         }
 
         // 簽發token
@@ -87,6 +89,7 @@ module.exports = (app) => {
       })
       .catch(error => {
         console.log(error)
+        return res.json({ status: 'error', message: '伺服器內部問題' })
       })
   })
 
@@ -101,14 +104,14 @@ module.exports = (app) => {
 
   app.get('/api/users/userSave', authenticated, (req, res) => {
     const userId = req.user.id
-    UserSave.findAll({ where: { UserId: userId }})
-    .then(userSaves => {
-      return res.json({ status: 'success', userSaves: userSaves })
-    })
-    .catch(error => {
-      console.log(error)
-      return res.status(505).json({ status: 'error' })
-    })
+    UserSave.findAll({ where: { UserId: userId } })
+      .then(userSaves => {
+        return res.json({ status: 'success', userSaves: userSaves })
+      })
+      .catch(error => {
+        console.log(error)
+        return res.json({ status: 'error', message: '伺服器內部問題' })
+      })
   })
 
   app.post('/api/users/addToUserSave', authenticated, (req, res) => {
@@ -121,7 +124,7 @@ module.exports = (app) => {
       })
       .catch(error => {
         console.log(error)
-        return res.status(505).json({ status: 'error' })
+        return res.json({ status: 'error', message: '伺服器內部問題' })
       })
   })
 
@@ -140,7 +143,7 @@ module.exports = (app) => {
       })
       .catch(error => {
         console.log(error)
-        return res.status(505).json({ status: 'error' })
+        return res.json({ status: 'error', message: '伺服器內部問題' })
       })
   })
 }
