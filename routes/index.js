@@ -182,6 +182,17 @@ module.exports = (app) => {
       })
   })
 
+  app.get('/api/users/notification', authenticated, (req, res) => {
+    UserNotification.findOne({ where: { UserId: req.user.id } })
+      .then(userNotification => {
+        return res.json({ status: 'success', userNotification: userNotification })
+      })
+      .catch(error => {
+        console.log(error)
+        return res.json({ status: 'error', message: '伺服器內部問題' })
+      })
+  })
+
   app.post('/api/users/onNotify', authenticated, (req, res) => {
     // 如果沒有開啟通知，則新增；如果已有開啟通知，則更新新的監控地點、條件
     UserNotification.findOne({ where: { UserId: req.user.id } })
