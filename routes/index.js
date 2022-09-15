@@ -26,24 +26,184 @@ const instance = axios.create({
     "Content-Type": "multipart/form-data"
   },
 })
+// 對照表
+const id_index_table = {
+  D001: 0,
+  D002: 1,
+  D003: 2,
+  D004: 3,
+  D052: 4,
+  D053: 5,
+  D054: 6,
+  D073: 7,
+  D076: 8,
+  D084: 9,
+  D085: 10,
+  D090: 11,
+  D091: 12,
+  D092: 13,
+  D093: 14,
+  D095: 15,
+  D096: 16,
+  D097: 17,
+  D005: 18,
+  D006: 19,
+  D007: 20,
+  D117: 21,
+  D118: 22,
+  D119: 23,
+  D120: 24,
+  D121: 25,
+  D122: 26,
+  D123: 27,
+  D008: 28,
+  D010: 29,
+  D012: 30,
+  D013: 31,
+  D015: 32,
+  D016: 33,
+  D017: 34,
+  D019: 35,
+  D024: 36,
+  D027: 37,
+  D087: 38,
+  D089: 39,
+  D098: 40,
+  D099: 41,
+  D100: 42,
+  D101: 43,
+  D009: 44,
+  D011: 45,
+  D014: 46,
+  D018: 47,
+  D020: 48,
+  D021: 49,
+  D022: 50,
+  D023: 51,
+  D025: 52,
+  D026: 53,
+  D028: 54,
+  D029: 55,
+  D030: 56,
+  D031: 57,
+  D032: 58,
+  D033: 59,
+  D034: 60,
+  D037: 61,
+  D038: 62,
+  D039: 63,
+  D040: 64,
+  D041: 65,
+  D042: 66,
+  D043: 67,
+  D044: 68,
+  D045: 69,
+  D046: 70,
+  D061: 71,
+  D068: 72,
+  D081: 73,
+  D082: 74,
+  D083: 75,
+  D086: 76,
+  D088: 77,
+  D094: 78,
+  D035: 79,
+  D036: 80,
+  D055: 81,
+  D056: 82,
+  D057: 83,
+  D058: 84,
+  D059: 85,
+  D060: 86,
+  D062: 87,
+  D063: 88,
+  D064: 89,
+  D065: 90,
+  D066: 91,
+  D067: 92,
+  D069: 93,
+  D070: 94,
+  D071: 95,
+  D047: 96,
+  D048: 97,
+  D049: 98,
+  D050: 99,
+  D051: 100,
+  D072: 101,
+  D078: 102,
+  D126: 103,
+  D127: 104,
+  D128: 105,
+  D129: 106,
+  D130: 107,
+  D131: 108,
+  D132: 109,
+  D133: 110,
+  D145: 111,
+  D074: 112,
+  D075: 113,
+  D077: 114,
+  D079: 115,
+  D146: 116,
+  D147: 117,
+  D148: 118,
+  D149: 119,
+  D150: 120,
+  D080: 121,
+  D102: 122,
+  D103: 123,
+  D104: 124,
+  D105: 125,
+  D106: 126,
+  D107: 127,
+  D108: 128,
+  D125: 129,
+  D109: 130,
+  D110: 131,
+  D111: 132,
+  D112: 133,
+  D113: 134,
+  D114: 135,
+  D115: 136,
+  D116: 137,
+  D151: 138,
+  D124: 139,
+  D134: 140,
+  D135: 141,
+  D136: 142,
+  D137: 143,
+  D138: 144,
+  D139: 145,
+  D140: 146,
+  D141: 147,
+  D142: 148,
+  D143: 149,
+  D144: 150
+}
 // 定時器
-// const clock = setInterval(fetchDataAndNotify, 5000);
+const clock = setInterval(fetchDataAndNotify, 5000);
 async function fetchDataAndNotify() {
   try {
     // 抓取中央氣象局資料
     let requestURL = `${CWBbaseURL}F-B0053-035?Authorization=${CWBAuthorization}&format=JSON`
     const response = await axios.get(requestURL)
 
-    // 判斷選定通知的地點的天氣條件，並發送 Line notify 訊息
-    if (Number(response.data.cwbopendata.dataset.locations.location[0].weatherElement[3].time[0].elementValue.value) >= 50) {
-      let locationName = response.data.cwbopendata.dataset.locations.location[0].locationName
-      let message = `${locationName} 近6小時降雨機率 >= 50%，降雨機率: ${Number(response.data.cwbopendata.dataset.locations.location[0].weatherElement[3].time[0].elementValue.value)}%`
-      const response2 = await instance.post('/', { message: message })
-    } else {
-      let locationName = response.data.cwbopendata.dataset.locations.location[0].locationName
-      let message = `${locationName} 近6小時降雨機率 < 50%，降雨機率: ${Number(response.data.cwbopendata.dataset.locations.location[0].weatherElement[3].time[0].elementValue.value)}%`
-      const response2 = await instance.post('/', { message: message })
-    }
+    UserNotification.findAll({ raw: true, nest: true })
+      .then(userNotifications => {
+        // 找出所有有開啟的通知設定
+        userNotifications.forEach(async (item) => {
+          try {
+            // 判斷選定通知的地點的天氣條件，並發送 Line notify 訊息
+            const mountainIndex = id_index_table[item.MountainId]
+            if (Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[3].time[0].elementValue.value) >= item.rainrate || Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[0].time[0].elementValue.value) >= item.temperature || Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[8].time[0].elementValue.value) >= item.apparentTemperature) {
+              let message = `\n${response.data.cwbopendata.dataset.locations.location[mountainIndex].locationName} \n${response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[10].time[0].elementValue.value}`
+              const response2 = await instance.post('/', { message: message })
+            } 
+          } catch (error) {
+            console.warn(error)
+          }
+        })
+      })
   } catch (error) {
     console.warn(error)
   }
@@ -227,9 +387,9 @@ module.exports = (app) => {
     UserNotification.findOne({ where: { UserId: req.user.id, MountainId: req.body.MountainId } })
       .then(userNotification => {
         userNotification.destroy()
-        .then(() => {
-          return res.json({ status: 'success' })
-        })
+          .then(() => {
+            return res.json({ status: 'success' })
+          })
       })
       .catch(error => {
         console.log(error)
