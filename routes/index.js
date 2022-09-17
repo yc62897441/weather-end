@@ -16,14 +16,19 @@ const passport = require('../config/passport')
 const authenticated = passport.authenticate('jwt', { session: false })
 
 // 定時撈取資料，並發送 Line 訊息
-// Line notify axios
-let LINENOTIFYTOKEN = process.env.LINENOTIFYTOKEN
+// Line notify、Line business messages axios
+// let LINE_NOTIFY_TOKEN = process.env.LINE_NOTIFY_TOKEN
+let LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
+let LINE_USER_ID = process.env.LINE_USER_ID
 const instance = axios.create({
-  baseURL: 'https://notify-api.line.me/api/notify',
+  // baseURL: 'https://notify-api.line.me/api/notify', // line notify-api 使用
+  baseURL: 'https://api.line.me/v2/bot/message/push',
   timeout: 1000,
   headers: {
-    Authorization: LINENOTIFYTOKEN,
-    "Content-Type": "multipart/form-data"
+    Authorization: `Bearer ${LINE_CHANNEL_TOKEN}`,
+    // "Content-Type": "multipart/form-data", // line notify-api 使用
+    // 'X-Line-Retry-Key': process.env.X-Line-Retry-Key, // 回應過一次好像就沒用了，也不需要
+    "Content-Type": "application/json",
   },
 })
 // 對照表
@@ -181,28 +186,39 @@ const id_index_table = {
   D144: 150
 }
 // 定時器
-const clock = setInterval(fetchDataAndNotify, 5000);
+const clock = setInterval(fetchDataAndNotify, 3000);
 async function fetchDataAndNotify() {
   try {
     // 抓取中央氣象局資料
     let requestURL = `${CWBbaseURL}F-B0053-035?Authorization=${CWBAuthorization}&format=JSON`
     const response = await axios.get(requestURL)
 
+    // 找出所有有開啟的通知設定
     UserNotification.findAll({ raw: true, nest: true })
-      .then(userNotifications => {
-        // 找出所有有開啟的通知設定
-        userNotifications.forEach(async (item) => {
-          try {
-            // 判斷選定通知的地點的天氣條件，並發送 Line notify 訊息
+      .then(async (userNotifications) => {
+        try {
+          Promise.all(userNotifications.map(item => {
+            // 判斷選定通知的地點的天氣條件，並發送 Line business messages 訊息
+            // 用 item.MountainId 從 id_index_table 找出對應的 mountainIndex；判斷 location[mountainIndex] 的天氣狀況是否要傳送訊息
             const mountainIndex = id_index_table[item.MountainId]
             if (Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[3].time[0].elementValue.value) >= item.rainrate || Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[0].time[0].elementValue.value) >= item.temperature || Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[8].time[0].elementValue.value) >= item.apparentTemperature) {
-              let message = `\n${response.data.cwbopendata.dataset.locations.location[mountainIndex].locationName} \n${response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[10].time[0].elementValue.value}`
-              const response2 = await instance.post('/', { message: message })
-            } 
-          } catch (error) {
-            console.warn(error)
-          }
-        })
+              // 製作訊息 eg.小霸尖山 午後短暫雷陣雨。降雨機率 30%。溫度攝氏14度。寒冷。西北風 平均風速<= 1級(每秒2公尺)。相對濕度72%。
+              let message = `${response.data.cwbopendata.dataset.locations.location[mountainIndex].locationName} \n${response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[10].time[0].elementValue.value}`
+
+              // 傳送訊息
+              const LineResponse = instance.post('/', {
+                to: LINE_USER_ID,
+                messages: [{
+                  "type": "text",
+                  "text": `${message}`
+                }]
+              })
+            }
+          }))
+          return
+        } catch (error) {
+          console.warn(error)
+        }
       })
   } catch (error) {
     console.warn(error)
