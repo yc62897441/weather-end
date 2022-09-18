@@ -185,7 +185,7 @@ const id_index_table = {
   D144: 150
 }
 // 定時器
-const clock = setInterval(fetchDataAndNotify, 3000);
+// const clock = setInterval(fetchDataAndNotify, 3000);
 async function fetchDataAndNotify() {
   try {
     // 抓取中央氣象局資料
