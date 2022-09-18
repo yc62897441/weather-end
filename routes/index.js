@@ -16,10 +16,9 @@ const passport = require('../config/passport')
 const authenticated = passport.authenticate('jwt', { session: false })
 
 // 定時撈取資料，並發送 Line 訊息
-// Line notify、Line business messages axios
-// let LINE_NOTIFY_TOKEN = process.env.LINE_NOTIFY_TOKEN
+// 設定 Line business messages axios、Line notify(專案沒使用這個)
+// let LINE_NOTIFY_TOKEN = process.env.LINE_NOTIFY_TOKEN //(專案沒使用這個)
 let LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
-let LINE_USER_ID = process.env.LINE_USER_ID
 const instance = axios.create({
   // baseURL: 'https://notify-api.line.me/api/notify', // line notify-api 使用
   baseURL: 'https://api.line.me/v2/bot/message/push',
@@ -194,13 +193,14 @@ async function fetchDataAndNotify() {
     const response = await axios.get(requestURL)
 
     // 找出所有有開啟的通知設定
-    UserNotification.findAll({ raw: true, nest: true })
+    UserNotification.findAll({ raw: true, nest: true, include: [User] })
       .then(async (userNotifications) => {
         try {
           Promise.all(userNotifications.map(item => {
             // 判斷選定通知的地點的天氣條件，並發送 Line business messages 訊息
             // 用 item.MountainId 從 id_index_table 找出對應的 mountainIndex；判斷 location[mountainIndex] 的天氣狀況是否要傳送訊息
             const mountainIndex = id_index_table[item.MountainId]
+            const LINE_USER_ID = item.User.LINE_USER_ID
             if (Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[3].time[0].elementValue.value) >= item.rainrate || Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[0].time[0].elementValue.value) >= item.temperature || Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[8].time[0].elementValue.value) >= item.apparentTemperature) {
               // 製作訊息 eg.小霸尖山 午後短暫雷陣雨。降雨機率 30%。溫度攝氏14度。寒冷。西北風 平均風速<= 1級(每秒2公尺)。相對濕度72%。
               let message = `${response.data.cwbopendata.dataset.locations.location[mountainIndex].locationName} \n${response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[10].time[0].elementValue.value}`
@@ -226,6 +226,76 @@ async function fetchDataAndNotify() {
 }
 
 module.exports = (app) => {
+  // 處理從 Line webhook 收到的 event，follow、message、unfollow
+  app.post('/', (req, res) => {
+    let UserId = req.user.id
+
+    // 設定 Line business messages axios
+    const LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
+    const instance = axios.create({
+      baseURL: 'https://api.line.me/v2/bot/message/push',
+      timeout: 1000,
+      headers: {
+        Authorization: `Bearer ${LINE_CHANNEL_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    })
+
+    // event 類型: follow、message、unfollow
+    if (req.body.events[0].type === 'follow') {
+      // follow: 儲存 LINE_USER_ID 到 User 資料表中，傳給使用者 "已加入好友" 訊息
+      User.findByPk(UserId)
+        .then(user => {
+          user.update({
+            LINE_USER_ID: req.body.events[0].source.userId
+          })
+            .then(async (user) => {
+              try {
+                const message = `已加入好友`
+                const LineResponse = await instance.post('/', {
+                  to: user.LINE_USER_ID,
+                  messages: [
+                    {
+                      "type": "text",
+                      "text": message
+                    }
+                  ]
+                })
+                return
+              } catch (error) {
+                console.warn(error)
+                return
+              }
+            })
+        })
+        .catch(error => {
+          console.log(error)
+          return
+        })
+      return
+    } else if (req.body.events[0].type === 'message') {
+      // message: 沒事做
+      return
+    } else if (req.body.events[0].type === 'unfollow') {
+      // unfollow: 刪除在 User 資料表中的 LINE_USER_ID
+      User.findByPk(UserId)
+        .then(user => {
+          user.update({
+            LINE_USER_ID: ''
+          })
+            .then(() => {
+              return
+            })
+        })
+        .catch(error => {
+          console.log(error)
+          return
+        })
+      return
+    }
+    return
+  })
+
   app.get('/api/weather_data', async (req, res) => {
     try {
       let requestURL = `${CWBbaseURL}${req.query.dataCategory}?Authorization=${CWBAuthorization}&format=${req.query.dataType}`
