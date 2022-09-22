@@ -11,9 +11,16 @@ const UserNotification = db.UserNotification
 // signin 簽發 token
 const jwt = require('jsonwebtoken')
 const JWT_SECRET = 'secret'
+
+// JWT 先註解起來
 // 進入其他需驗證路由的驗證
-const passport = require('../config/passport')
-const authenticated = passport.authenticate('jwt', { session: false })
+// const passport = require('../config/passport')
+// const authenticated = passport.authenticate('jwt', { session: false })
+
+
+// LINE-passport 以下兩行測試可刪
+const passport = require('passport')
+const authenticated = function () { passport() }
 
 // 定時撈取資料，並發送 Line 訊息
 // 設定 Line business messages axios、Line notify(專案沒使用這個)
@@ -480,5 +487,53 @@ module.exports = (app) => {
       .catch(error => {
         console.log(error)
       })
+  })
+
+  // 以下測試，可刪
+  // 向 Facebook 發出請求，帶入的參數 scope: ['email', 'public_profile'] 是我們向 Facebook 要求的資料
+  // app.get('/api/auth/line', passport.authenticate('line', {
+  //   scope: ['profile', '20openid']
+  // }))
+  app.get('/api/auth/line', async (req, res) => {
+    try {
+      const response = await passport.authenticate('line', {
+        scope: ['profile', '20openid']
+      })
+      console.log('response', response)
+      return res.json({ data: response })
+
+      console.log('===')
+      console.log('===')
+      console.log('===')
+      console.log('api/auth/line')
+      console.log('response', response)
+      response()
+
+    } catch (error) {
+      console.log(error)
+    }
+  })
+
+  // Line 把資料發回來
+  //   app.get('/api/auth/line/callback', passport.authenticate('line', {
+  //     successRedirect: '/api/get_current_user',
+  //     failureRedirect: '/api/weather_data'
+  //   }))
+  app.get('/api/auth/line/callback', async (req, res) => {
+    try {
+      // 傳送訊息
+      let messages = 'asdsas'
+      const LINE_USER_ID = process.env.LINE_USER_ID
+      const LineResponse = await instance.post('/', {
+        to: LINE_USER_ID,
+        messages: [{
+          "type": "text",
+          "text": `${message}`
+        }]
+      })
+      return res.json({ status: 'success' })
+    } catch (error) {
+      console.log(error)
+    }
   })
 }
