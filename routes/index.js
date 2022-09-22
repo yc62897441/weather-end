@@ -528,7 +528,7 @@ module.exports = (app) => {
         to: LINE_USER_ID,
         messages: [{
           "type": "text",
-          "text": `${message}`
+          "text": `${messages}`
         }]
       })
       return res.json({ status: 'success' })
