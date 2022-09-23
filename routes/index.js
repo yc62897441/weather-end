@@ -527,13 +527,13 @@ const instance_Issue_access_token = axios.create({
 async function getLineUserInfo(code) {
   try {
     const response = await axios.post('https://api.line.me/oauth2/v2.1/token', {
-      'grant_type': 'authorization_code',
-      'code': code,
-      'redirect_uri': 'https://side-project-weather-end.herokuapp.com/api/auth/line/callback',
-      'client_id': process.env.LINE_LOGIN_CHANNEL_ID,
-      'client_secret': process.env.LINE_LOGIN_CHANNEL_SECRET
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: 'https://side-project-weather-end.herokuapp.com/api/auth/line/callback',
+      client_id: process.env.LINE_LOGIN_CHANNEL_ID,
+      client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
     }, {
-      headers: {
+      Headers: {
         "Content-Type": "application/x-www-form-urlencoded"
       }
     })
