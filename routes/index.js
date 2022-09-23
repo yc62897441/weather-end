@@ -544,14 +544,14 @@ router.get('/api/auth/line/callback', async (req, res) => {
     messages = messages + `req.query.code: ${req.query.code} \n`
     messages = messages + `req.query.state: ${req.query.state} \n`
 
-    const response_instance_Issue_access_token = await instance_Issue_access_token.post('/', {
-      'grant_type': 'authorization_code',
-      'code': req.query.code,
-      'redirect_uri': 'https://side-project-weather-end.herokuapp.com/api/auth/line/callback',
-      'client_id': process.env.LINE_LOGIN_CHANNEL_ID,
-      'client_secret': process.env.LINE_LOGIN_CHANNEL_SECRET
-    })
-    messages = messages + `response_instance_Issue_access_token \n`
+    // const response_instance_Issue_access_token = await instance_Issue_access_token.post('/', {
+    //   'grant_type': 'authorization_code',
+    //   'code': req.query.code,
+    //   'redirect_uri': 'https://side-project-weather-end.herokuapp.com/api/auth/line/callback',
+    //   'client_id': process.env.LINE_LOGIN_CHANNEL_ID,
+    //   'client_secret': process.env.LINE_LOGIN_CHANNEL_SECRET
+    // })
+    // messages = messages + `response_instance_Issue_access_token \n`
     // for (key in response_instance_Issue_access_token) {
     //   messages = messages + `${key}: ${response_instance_Issue_access_token[key]} \n`
     // }
@@ -564,14 +564,14 @@ router.get('/api/auth/line/callback', async (req, res) => {
     // messages = messages + `scope: ${response_instance_Issue_access_token.scope} \n`
     // messages = messages + `token_type: ${response_instance_Issue_access_token.token_type} \n`
 
-    // const LINE_USER_ID = process.env.LINE_USER_ID
-    // const LineResponse = await instance.post('/', {
-    //   to: LINE_USER_ID,
-    //   messages: [{
-    //     "type": "text",
-    //     "text": `${messages}`
-    //   }]
-    // })
+    const LINE_USER_ID = process.env.LINE_USER_ID
+    const LineResponse = await instance.post('/', {
+      to: LINE_USER_ID,
+      messages: [{
+        "type": "text",
+        "text": `${messages}`
+      }]
+    })
 
     return res.redirect('https://yc62897441.github.io/weather-front?authticate_Ok')
     return res.json({ status: 'success' })
