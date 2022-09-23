@@ -21,9 +21,10 @@ const JWT_SECRET = 'secret'
 // const authenticated = passport.authenticate('jwt', { session: false })
 
 
-// LINE-passport 以下兩行測試可刪
+// LINE-passport 以下三行測試可刪
 const passport = require('passport')
 const authenticated = function () { passport() }
+const { authenticator } = require('../middleware/auth') // 驗證登入狀態
 
 // 定時撈取資料，並發送 Line 訊息
 // 設定 Line business messages axios、Line notify(專案沒使用這個)
@@ -236,315 +237,315 @@ async function fetchDataAndNotify() {
 }
 
 
-  // 處理從 Line webhook 收到的 event，follow、message、unfollow
+// 處理從 Line webhook 收到的 event，follow、message、unfollow
 router.post('/', (req, res) => {
-    let UserId = req.user.id
+  let UserId = req.user.id
 
-    // 設定 Line business messages axios
-    const LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
-    const instance = axios.create({
-      baseURL: 'https://api.line.me/v2/bot/message/push',
-      timeout: 1000,
-      headers: {
-        Authorization: `Bearer ${LINE_CHANNEL_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-    })
-
-    // event 類型: follow、message、unfollow
-    if (req.body.events[0].type === 'follow') {
-      // follow: 儲存 LINE_USER_ID 到 User 資料表中，傳給使用者 "已加入好友" 訊息
-      User.findByPk(UserId)
-        .then(user => {
-          user.update({
-            LINE_USER_ID: req.body.events[0].source.userId
-          })
-            .then(async (user) => {
-              try {
-                const message = `已加入好友`
-                const LineResponse = await instance.post('/', {
-                  to: user.LINE_USER_ID,
-                  messages: [
-                    {
-                      "type": "text",
-                      "text": message
-                    }
-                  ]
-                })
-                return
-              } catch (error) {
-                console.warn(error)
-                return
-              }
-            })
-        })
-        .catch(error => {
-          console.log(error)
-          return
-        })
-      return
-    } else if (req.body.events[0].type === 'message') {
-      // message: 沒事做
-      return
-    } else if (req.body.events[0].type === 'unfollow') {
-      // unfollow: 刪除在 User 資料表中的 LINE_USER_ID
-      User.findByPk(UserId)
-        .then(user => {
-          user.update({
-            LINE_USER_ID: ''
-          })
-            .then(() => {
-              return
-            })
-        })
-        .catch(error => {
-          console.log(error)
-          return
-        })
-      return
-    }
-    return
+  // 設定 Line business messages axios
+  const LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
+  const instance = axios.create({
+    baseURL: 'https://api.line.me/v2/bot/message/push',
+    timeout: 1000,
+    headers: {
+      Authorization: `Bearer ${LINE_CHANNEL_TOKEN}`,
+      "Content-Type": "application/json",
+    },
   })
+
+  // event 類型: follow、message、unfollow
+  if (req.body.events[0].type === 'follow') {
+    // follow: 儲存 LINE_USER_ID 到 User 資料表中，傳給使用者 "已加入好友" 訊息
+    User.findByPk(UserId)
+      .then(user => {
+        user.update({
+          LINE_USER_ID: req.body.events[0].source.userId
+        })
+          .then(async (user) => {
+            try {
+              const message = `已加入好友`
+              const LineResponse = await instance.post('/', {
+                to: user.LINE_USER_ID,
+                messages: [
+                  {
+                    "type": "text",
+                    "text": message
+                  }
+                ]
+              })
+              return
+            } catch (error) {
+              console.warn(error)
+              return
+            }
+          })
+      })
+      .catch(error => {
+        console.log(error)
+        return
+      })
+    return
+  } else if (req.body.events[0].type === 'message') {
+    // message: 沒事做
+    return
+  } else if (req.body.events[0].type === 'unfollow') {
+    // unfollow: 刪除在 User 資料表中的 LINE_USER_ID
+    User.findByPk(UserId)
+      .then(user => {
+        user.update({
+          LINE_USER_ID: ''
+        })
+          .then(() => {
+            return
+          })
+      })
+      .catch(error => {
+        console.log(error)
+        return
+      })
+    return
+  }
+  return
+})
 
 router.get('/api/weather_data', async (req, res) => {
-    try {
-      let requestURL = `${CWBbaseURL}${req.query.dataCategory}?Authorization=${CWBAuthorization}&format=${req.query.dataType}`
-      const response = await axios.get(requestURL)
-      if (response.status === 200) {
-        return res.json({ status: 'success', message: 'test ok', dataset: { ...response.data.cwbopendata.dataset } })
-      } else {
-        return res.status.json({ status: 'error', message: '無法取得氣象資料' })
-      }
-    } catch (error) {
-      console.warn(error)
-      return res.json({ status: 'error', message: '伺服器內部問題' })
+  try {
+    let requestURL = `${CWBbaseURL}${req.query.dataCategory}?Authorization=${CWBAuthorization}&format=${req.query.dataType}`
+    const response = await axios.get(requestURL)
+    if (response.status === 200) {
+      return res.json({ status: 'success', message: 'test ok', dataset: { ...response.data.cwbopendata.dataset } })
+    } else {
+      return res.status.json({ status: 'error', message: '無法取得氣象資料' })
     }
-  })
+  } catch (error) {
+    console.warn(error)
+    return res.json({ status: 'error', message: '伺服器內部問題' })
+  }
+})
 
 router.post('/api/users/signup', (req, res) => {
-    // 取得前端表單資料
-    const { account, password } = req.body
+  // 取得前端表單資料
+  const { account, password } = req.body
 
-    // 表單資料有缺漏，或是password, checkPassword 不一致時，return
-    if (!account || !password) {
-      return res.status.json({ status: 'error', message: 'account, password 資料缺漏' })
-    }
+  // 表單資料有缺漏，或是password, checkPassword 不一致時，return
+  if (!account || !password) {
+    return res.status.json({ status: 'error', message: 'account, password 資料缺漏' })
+  }
 
-    User.findOne({ where: { account: account } })
-      .then(user => {
-        if (user) {
-          return res.json({ status: 'account_exist', message: '帳號已經存在' })
-        }
+  User.findOne({ where: { account: account } })
+    .then(user => {
+      if (user) {
+        return res.json({ status: 'account_exist', message: '帳號已經存在' })
+      }
 
-        User.create({
-          account: account,
-          password: bcrypt.hashSync(password, bcrypt.genSaltSync(10))
+      User.create({
+        account: account,
+        password: bcrypt.hashSync(password, bcrypt.genSaltSync(10))
+      })
+        .then(user => {
+          return res.json({ status: 'success', message: '註冊成功' })
         })
-          .then(user => {
-            return res.json({ status: 'success', message: '註冊成功' })
-          })
-      })
-      .catch(error => {
-        console.warn(error)
-        return res.json({ status: 'error', message: '伺服器內部問題' })
-      })
-  })
+    })
+    .catch(error => {
+      console.warn(error)
+      return res.json({ status: 'error', message: '伺服器內部問題' })
+    })
+})
 
 router.post('/api/users/signin', (req, res) => {
-    // 取得前端表單資料
-    const { account, password } = req.body
-    if (!account || !password) {
-      return res.json({ status: 'error', message: '請輸入 account 與 password' })
-    }
+  // 取得前端表單資料
+  const { account, password } = req.body
+  if (!account || !password) {
+    return res.json({ status: 'error', message: '請輸入 account 與 password' })
+  }
 
-    User.findOne({ where: { account: account } })
-      .then(user => {
-        if (!user) {
-          return res.json({ status: 'error', message: '不存在此 account' })
-        }
-        if (!bcrypt.compareSync(password, user.password)) {
-          return res.json({ status: 'error', message: '密碼錯誤' })
-        }
+  User.findOne({ where: { account: account } })
+    .then(user => {
+      if (!user) {
+        return res.json({ status: 'error', message: '不存在此 account' })
+      }
+      if (!bcrypt.compareSync(password, user.password)) {
+        return res.json({ status: 'error', message: '密碼錯誤' })
+      }
 
-        // 簽發token
-        const payload = { id: user.id }
-        const token = jwt.sign(payload, JWT_SECRET)
+      // 簽發token
+      const payload = { id: user.id }
+      const token = jwt.sign(payload, JWT_SECRET)
 
-        // 回傳訊息、token、user data
-        return res.json({
-          status: 'success',
-          message: '登入驗證成功',
-          token: token,
-          user: user
-        })
+      // 回傳訊息、token、user data
+      return res.json({
+        status: 'success',
+        message: '登入驗證成功',
+        token: token,
+        user: user
       })
-      .catch(error => {
-        console.log(error)
-        return res.json({ status: 'error', message: '伺服器內部問題' })
-      })
-  })
+    })
+    .catch(error => {
+      console.log(error)
+      return res.json({ status: 'error', message: '伺服器內部問題' })
+    })
+})
 
 router.get('/api/get_current_user', authenticated, (req, res) => {
-    // JWT驗證後從資料庫撈出的 req.user
-    // 這邊的資料屬性要和 /config/passport.js 定義的一致
-    return res.json({
-      id: req.user.id,
-      account: req.user.account,
-    })
+  // JWT驗證後從資料庫撈出的 req.user
+  // 這邊的資料屬性要和 /config/passport.js 定義的一致
+  return res.json({
+    id: req.user.id,
+    account: req.user.account,
   })
+})
 
 router.get('/api/users/userSave', authenticated, (req, res) => {
-    const userId = req.user.id
-    UserSave.findAll({ where: { UserId: userId } })
-      .then(userSaves => {
-        return res.json({ status: 'success', userSaves: userSaves })
-      })
-      .catch(error => {
-        console.log(error)
-        return res.json({ status: 'error', message: '伺服器內部問題' })
-      })
-  })
+  const userId = req.user.id
+  UserSave.findAll({ where: { UserId: userId } })
+    .then(userSaves => {
+      return res.json({ status: 'success', userSaves: userSaves })
+    })
+    .catch(error => {
+      console.log(error)
+      return res.json({ status: 'error', message: '伺服器內部問題' })
+    })
+})
 
 router.post('/api/users/addToUserSave', authenticated, (req, res) => {
-    UserSave.create({
-      UserId: req.user.id,
-      MountainId: req.body.MountainId
-    })
-      .then(() => {
-        return res.json({ status: 'success' })
-      })
-      .catch(error => {
-        console.log(error)
-        return res.json({ status: 'error', message: '伺服器內部問題' })
-      })
+  UserSave.create({
+    UserId: req.user.id,
+    MountainId: req.body.MountainId
   })
+    .then(() => {
+      return res.json({ status: 'success' })
+    })
+    .catch(error => {
+      console.log(error)
+      return res.json({ status: 'error', message: '伺服器內部問題' })
+    })
+})
 
 router.post('/api/users/removeFromUserSave', authenticated, (req, res) => {
-    UserSave.findOne({
-      where: {
-        UserId: req.user.id,
-        MountainId: req.body.MountainId
-      }
-    })
-      .then(userSave => {
-        userSave.destroy()
-          .then(() => {
-            return res.json({ status: 'success' })
-          })
-      })
-      .catch(error => {
-        console.log(error)
-        return res.json({ status: 'error', message: '伺服器內部問題' })
-      })
+  UserSave.findOne({
+    where: {
+      UserId: req.user.id,
+      MountainId: req.body.MountainId
+    }
   })
+    .then(userSave => {
+      userSave.destroy()
+        .then(() => {
+          return res.json({ status: 'success' })
+        })
+    })
+    .catch(error => {
+      console.log(error)
+      return res.json({ status: 'error', message: '伺服器內部問題' })
+    })
+})
 
 router.get('/api/users/notification', authenticated, (req, res) => {
-    UserNotification.findOne({ where: { UserId: req.user.id } })
-      .then(userNotification => {
-        return res.json({ status: 'success', userNotification: userNotification })
-      })
-      .catch(error => {
-        console.log(error)
-        return res.json({ status: 'error', message: '伺服器內部問題' })
-      })
-  })
+  UserNotification.findOne({ where: { UserId: req.user.id } })
+    .then(userNotification => {
+      return res.json({ status: 'success', userNotification: userNotification })
+    })
+    .catch(error => {
+      console.log(error)
+      return res.json({ status: 'error', message: '伺服器內部問題' })
+    })
+})
 
 router.post('/api/users/onNotify', authenticated, (req, res) => {
-    // 如果沒有開啟通知，則新增；如果已有開啟通知，則更新新的監控地點、條件
-    UserNotification.findOne({ where: { UserId: req.user.id } })
-      .then(userNotification => {
-        if (!userNotification) {
-          UserNotification.create({
-            UserId: req.user.id,
-            MountainId: req.body.MountainId,
-            temperature: req.body.temperature.value,
-            apparentTemperature: req.body.apparentTemperature.value,
-            rainrate: req.body.rainrate.value
-          })
-        } else {
-          userNotification.update({
-            UserId: req.user.id,
-            MountainId: req.body.MountainId,
-            temperature: req.body.temperature.value,
-            apparentTemperature: req.body.apparentTemperature.value,
-            rainrate: req.body.rainrate.value
-          })
-        }
-      })
-      .then(() => {
-        return res.json({ status: 'success' })
-      })
-      .catch(error => {
-        console.log(error)
-      })
-  })
+  // 如果沒有開啟通知，則新增；如果已有開啟通知，則更新新的監控地點、條件
+  UserNotification.findOne({ where: { UserId: req.user.id } })
+    .then(userNotification => {
+      if (!userNotification) {
+        UserNotification.create({
+          UserId: req.user.id,
+          MountainId: req.body.MountainId,
+          temperature: req.body.temperature.value,
+          apparentTemperature: req.body.apparentTemperature.value,
+          rainrate: req.body.rainrate.value
+        })
+      } else {
+        userNotification.update({
+          UserId: req.user.id,
+          MountainId: req.body.MountainId,
+          temperature: req.body.temperature.value,
+          apparentTemperature: req.body.apparentTemperature.value,
+          rainrate: req.body.rainrate.value
+        })
+      }
+    })
+    .then(() => {
+      return res.json({ status: 'success' })
+    })
+    .catch(error => {
+      console.log(error)
+    })
+})
 
 router.post('/api/users/offNotify', authenticated, (req, res) => {
-    UserNotification.findOne({ where: { UserId: req.user.id, MountainId: req.body.MountainId } })
-      .then(userNotification => {
-        userNotification.destroy()
-          .then(() => {
-            return res.json({ status: 'success' })
-          })
-      })
-      .catch(error => {
-        console.log(error)
-      })
-  })
+  UserNotification.findOne({ where: { UserId: req.user.id, MountainId: req.body.MountainId } })
+    .then(userNotification => {
+      userNotification.destroy()
+        .then(() => {
+          return res.json({ status: 'success' })
+        })
+    })
+    .catch(error => {
+      console.log(error)
+    })
+})
 
-  // 以下測試，可刪
-  // 向 Facebook 發出請求，帶入的參數 scope: ['email', 'public_profile'] 是我們向 Facebook 要求的資料
-  // app.get('/api/auth/line', passport.authenticate('line', {
-  //   scope: ['profile', '20openid']
-  // }))
+// 以下測試，可刪
+// 向 Facebook 發出請求，帶入的參數 scope: ['email', 'public_profile'] 是我們向 Facebook 要求的資料
+// app.get('/api/auth/line', passport.authenticate('line', {
+//   scope: ['profile', '20openid']
+// }))
 router.get('/api/auth/line', async (req, res) => {
-    try {
-      const response = await passport.authenticate('line', {
-        scope: ['profile', '20openid']
-      })
-      console.log('response', response)
-      return res.json({ data: response })
+  try {
+    const response = await passport.authenticate('line', {
+      scope: ['profile', '20openid']
+    })
+    console.log('response', response)
+    return res.json({ data: response })
 
-      console.log('===')
-      console.log('===')
-      console.log('===')
-      console.log('api/auth/line')
-      console.log('response', response)
-      response()
+    console.log('===')
+    console.log('===')
+    console.log('===')
+    console.log('api/auth/line')
+    console.log('response', response)
+    response()
 
-    } catch (error) {
-      console.log(error)
-    }
-  })
+  } catch (error) {
+    console.log(error)
+  }
+})
 
-  // Line 把資料發回來
-  //   app.get('/api/auth/line/callback', passport.authenticate('line', {
-  //     successRedirect: '/api/get_current_user',
-  //     failureRedirect: '/api/weather_data'
-  //   }))
+// Line 把資料發回來
+//   app.get('/api/auth/line/callback', passport.authenticate('line', {
+//     successRedirect: '/api/get_current_user',
+//     failureRedirect: '/api/weather_data'
+//   }))
 router.get('/api/auth/line/callback', passport.authenticate('line', {
-    // successRedirect: '/success_login',
-    failureRedirect: '/users/login'
-  }), async (req, res) => {
-    try {
+  successRedirect: '/success_login',
+  failureRedirect: '/users/login'
+}), async (req, res) => {
+  try {
 
-      // 會到 callback 這邊
-      // 看看怎麼可以拿到 user 資訊
+    // 會到 callback 這邊
+    // 看看怎麼可以拿到 user 資訊
 
-      // 傳送訊息
-      let messages = 'asdsas'
-      const LINE_USER_ID = process.env.LINE_USER_ID
-      const LineResponse = await instance.post('/', {
-        to: LINE_USER_ID,
-        messages: [{
-          "type": "text",
-          "text": `${messages}`
-        }]
-      })
-      return res.json({ status: 'success' })
-    } catch (error) {
-      console.log(error)
-    }
-  })
+    // 傳送訊息
+    let messages = 'asdsas'
+    const LINE_USER_ID = process.env.LINE_USER_ID
+    const LineResponse = await instance.post('/', {
+      to: LINE_USER_ID,
+      messages: [{
+        "type": "text",
+        "text": `${messages}`
+      }]
+    })
+    return res.json({ status: 'success' })
+  } catch (error) {
+    console.log(error)
+  }
+})
 
 module.exports = router
