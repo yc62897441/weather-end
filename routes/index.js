@@ -544,22 +544,17 @@ router.get('/api/auth/line/callback', async (req, res) => {
     messages = messages + `req.query.code: ${req.query.code} \n`
     messages = messages + `req.query.state: ${req.query.state} \n`
 
-    if (req.query) {
-      if (req.query.code) {
-        const response_instance_Issue_access_token = await instance_Issue_access_token.post('/', {
-          'grant_type': 'authorization_code',
-          'code': req.query.code,
-          'redirect_uri': 'https://side-project-weather-end.herokuapp.com/api/auth/line/callback',
-          'client_id': process.env.LINE_LOGIN_CHANNEL_ID,
-          'client_secret': process.env.LINE_LOGIN_CHANNEL_SECRET
-        })
-        messages = messages + `response_instance_Issue_access_token: ${response_instance_Issue_access_token} \n`
-        // messages = messages + `response_instance_Issue_access_token \n`
-        // for (key in response_instance_Issue_access_token) {
-        //   messages = messages + `${key}: ${response_instance_Issue_access_token[key]} \n`
-        // }
-      }
-    }
+    const response_instance_Issue_access_token = await instance_Issue_access_token.post('/', {
+      'grant_type': 'authorization_code',
+      'code': req.query.code,
+      'redirect_uri': 'https://side-project-weather-end.herokuapp.com/api/auth/line/callback',
+      'client_id': process.env.LINE_LOGIN_CHANNEL_ID,
+      'client_secret': process.env.LINE_LOGIN_CHANNEL_SECRET
+    })
+    messages = messages + `response_instance_Issue_access_token \n`
+    // for (key in response_instance_Issue_access_token) {
+    //   messages = messages + `${key}: ${response_instance_Issue_access_token[key]} \n`
+    // }
 
     // messages = messages + `response_instance_Issue_access_token \n`
     // messages = messages + `access_token: ${response_instance_Issue_access_token.access_token} \n`
