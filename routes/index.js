@@ -519,8 +519,15 @@ module.exports = (app) => {
   //     successRedirect: '/api/get_current_user',
   //     failureRedirect: '/api/weather_data'
   //   }))
-  app.get('/api/auth/line/callback', async (req, res) => {
+  app.get('/api/auth/line/callback', passport.authenticate('line', {
+    // successRedirect: '/success_login',
+    failureRedirect: '/users/login'
+  }), async (req, res) => {
     try {
+
+      // 會到 callback 這邊
+      // 看看怎麼可以拿到 user 資訊
+
       // 傳送訊息
       let messages = 'asdsas'
       const LINE_USER_ID = process.env.LINE_USER_ID
