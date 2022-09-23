@@ -564,14 +564,14 @@ router.get('/api/auth/line/callback', async (req, res) => {
     // messages = messages + `scope: ${response_instance_Issue_access_token.scope} \n`
     // messages = messages + `token_type: ${response_instance_Issue_access_token.token_type} \n`
 
-    const LINE_USER_ID = process.env.LINE_USER_ID
-    const LineResponse = await instance.post('/', {
-      to: LINE_USER_ID,
-      messages: [{
-        "type": "text",
-        "text": `${messages}`
-      }]
-    })
+    // const LINE_USER_ID = process.env.LINE_USER_ID
+    // const LineResponse = await instance.post('/', {
+    //   to: LINE_USER_ID,
+    //   messages: [{
+    //     "type": "text",
+    //     "text": `${messages}`
+    //   }]
+    // })
 
     return res.redirect('https://yc62897441.github.io/weather-front?authticate_Ok')
     return res.json({ status: 'success' })
