@@ -529,7 +529,26 @@ router.get('/api/auth/line/callback', async (req, res) => {
     // 看看怎麼可以拿到 user 資訊
 
     // 傳送訊息
-    let messages = 'asdsas'
+    let messages = 'path: /api/auth/line/callback \n'
+
+    if (req.body) {
+      messages = messages + 'req.body \n'
+      for (key in req.body) {
+        messages = messages + `${key} \n`
+      }
+    } else {
+      messages = messages + 'No req.body \n'
+    }
+
+    if (req.query) {
+      messages = messages + 'req.query \n'
+      for (key in req.query) {
+        messages = messages + `${key} \n`
+      }
+    } else {
+      messages = messages + 'No req.query \n'
+    }
+
     const LINE_USER_ID = process.env.LINE_USER_ID
     const LineResponse = await instance.post('/', {
       to: LINE_USER_ID,
