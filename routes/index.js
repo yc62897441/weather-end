@@ -540,14 +540,8 @@ router.get('/api/auth/line/callback', async (req, res) => {
       messages = messages + 'No req.body \n'
     }
 
-    if (req.query) {
-      messages = messages + 'req.query \n'
-      for (key in req.query) {
-        messages = messages + `${key} \n`
-      }
-    } else {
-      messages = messages + 'No req.query \n'
-    }
+    messages = messages + `req.query.code: ${req.query.code} \n`
+    messages = messages + `req.query.state: ${req.query.state} \n`
 
     const LINE_USER_ID = process.env.LINE_USER_ID
     const LineResponse = await instance.post('/', {
@@ -558,7 +552,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
       }]
     })
 
-    return res.redirect('https://yc62897441.github.io/weather-front')
+    return res.redirect('https://yc62897441.github.io/weather-front?authticate_Ok')
     return res.json({ status: 'success' })
   } catch (error) {
     console.log(error)
