@@ -523,12 +523,8 @@ router.get('/api/auth/line', async (req, res) => {
 //     successRedirect: '/api/get_current_user',
 //     failureRedirect: '/api/weather_data'
 //   }))
-router.get('/api/auth/line/callback', passport.authenticate('line', {
-  successRedirect: '/success_login',
-  failureRedirect: '/users/login'
-}), async (req, res) => {
+router.get('/api/auth/line/callback', async (req, res) => {
   try {
-
     // 會到 callback 這邊
     // 看看怎麼可以拿到 user 資訊
 
@@ -542,9 +538,12 @@ router.get('/api/auth/line/callback', passport.authenticate('line', {
         "text": `${messages}`
       }]
     })
+
+    return res.redirect('https://yc62897441.github.io/weather-front')
     return res.json({ status: 'success' })
   } catch (error) {
     console.log(error)
+    return res.redirect('https://yc62897441.github.io/weather-front?error')
   }
 })
 
