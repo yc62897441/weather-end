@@ -526,6 +526,8 @@ const instance_Issue_access_token = axios.create({
 
 async function getLineUserInfo(code) {
   try {
+    sendLine(code)
+    return
     const response_instance_Issue_access_token = await instance_Issue_access_token.post('/', {
       'grant_type': 'authorization_code',
       'code': code,
