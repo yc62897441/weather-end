@@ -48,7 +48,8 @@ module.exports = app => {
       let LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
       let LINE_USER_ID = process.env.LINE_USER_ID
 
-      let message = `accessToken: ${accessToken} \n refreshToken: ${refreshToken} \n profile: ${profile.id} \n`
+      // let message = `accessToken: ${accessToken} \n refreshToken: ${refreshToken} \n profile: ${profile.id} \n`
+      let message = 'passport'
 
       const instance = axios.create({
         baseURL: 'https://api.line.me/v2/bot/message/push',

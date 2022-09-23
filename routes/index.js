@@ -1,3 +1,6 @@
+const express = require('express')
+const router = express.Router()
+
 const axios = require('axios')
 let CWBAuthorization = process.env.CWBAuthorization
 let CWBbaseURL = 'https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/'
@@ -232,9 +235,9 @@ async function fetchDataAndNotify() {
   }
 }
 
-module.exports = (app) => {
+
   // 處理從 Line webhook 收到的 event，follow、message、unfollow
-  app.post('/', (req, res) => {
+router.post('/', (req, res) => {
     let UserId = req.user.id
 
     // 設定 Line business messages axios
@@ -303,7 +306,7 @@ module.exports = (app) => {
     return
   })
 
-  app.get('/api/weather_data', async (req, res) => {
+router.get('/api/weather_data', async (req, res) => {
     try {
       let requestURL = `${CWBbaseURL}${req.query.dataCategory}?Authorization=${CWBAuthorization}&format=${req.query.dataType}`
       const response = await axios.get(requestURL)
@@ -318,7 +321,7 @@ module.exports = (app) => {
     }
   })
 
-  app.post('/api/users/signup', (req, res) => {
+router.post('/api/users/signup', (req, res) => {
     // 取得前端表單資料
     const { account, password } = req.body
 
@@ -347,7 +350,7 @@ module.exports = (app) => {
       })
   })
 
-  app.post('/api/users/signin', (req, res) => {
+router.post('/api/users/signin', (req, res) => {
     // 取得前端表單資料
     const { account, password } = req.body
     if (!account || !password) {
@@ -381,7 +384,7 @@ module.exports = (app) => {
       })
   })
 
-  app.get('/api/get_current_user', authenticated, (req, res) => {
+router.get('/api/get_current_user', authenticated, (req, res) => {
     // JWT驗證後從資料庫撈出的 req.user
     // 這邊的資料屬性要和 /config/passport.js 定義的一致
     return res.json({
@@ -390,7 +393,7 @@ module.exports = (app) => {
     })
   })
 
-  app.get('/api/users/userSave', authenticated, (req, res) => {
+router.get('/api/users/userSave', authenticated, (req, res) => {
     const userId = req.user.id
     UserSave.findAll({ where: { UserId: userId } })
       .then(userSaves => {
@@ -402,7 +405,7 @@ module.exports = (app) => {
       })
   })
 
-  app.post('/api/users/addToUserSave', authenticated, (req, res) => {
+router.post('/api/users/addToUserSave', authenticated, (req, res) => {
     UserSave.create({
       UserId: req.user.id,
       MountainId: req.body.MountainId
@@ -416,7 +419,7 @@ module.exports = (app) => {
       })
   })
 
-  app.post('/api/users/removeFromUserSave', authenticated, (req, res) => {
+router.post('/api/users/removeFromUserSave', authenticated, (req, res) => {
     UserSave.findOne({
       where: {
         UserId: req.user.id,
@@ -435,7 +438,7 @@ module.exports = (app) => {
       })
   })
 
-  app.get('/api/users/notification', authenticated, (req, res) => {
+router.get('/api/users/notification', authenticated, (req, res) => {
     UserNotification.findOne({ where: { UserId: req.user.id } })
       .then(userNotification => {
         return res.json({ status: 'success', userNotification: userNotification })
@@ -446,7 +449,7 @@ module.exports = (app) => {
       })
   })
 
-  app.post('/api/users/onNotify', authenticated, (req, res) => {
+router.post('/api/users/onNotify', authenticated, (req, res) => {
     // 如果沒有開啟通知，則新增；如果已有開啟通知，則更新新的監控地點、條件
     UserNotification.findOne({ where: { UserId: req.user.id } })
       .then(userNotification => {
@@ -476,7 +479,7 @@ module.exports = (app) => {
       })
   })
 
-  app.post('/api/users/offNotify', authenticated, (req, res) => {
+router.post('/api/users/offNotify', authenticated, (req, res) => {
     UserNotification.findOne({ where: { UserId: req.user.id, MountainId: req.body.MountainId } })
       .then(userNotification => {
         userNotification.destroy()
@@ -494,7 +497,7 @@ module.exports = (app) => {
   // app.get('/api/auth/line', passport.authenticate('line', {
   //   scope: ['profile', '20openid']
   // }))
-  app.get('/api/auth/line', async (req, res) => {
+router.get('/api/auth/line', async (req, res) => {
     try {
       const response = await passport.authenticate('line', {
         scope: ['profile', '20openid']
@@ -519,7 +522,7 @@ module.exports = (app) => {
   //     successRedirect: '/api/get_current_user',
   //     failureRedirect: '/api/weather_data'
   //   }))
-  app.get('/api/auth/line/callback', passport.authenticate('line', {
+router.get('/api/auth/line/callback', passport.authenticate('line', {
     // successRedirect: '/success_login',
     failureRedirect: '/users/login'
   }), async (req, res) => {
@@ -543,4 +546,5 @@ module.exports = (app) => {
       console.log(error)
     }
   })
-}
+
+module.exports = router
