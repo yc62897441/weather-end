@@ -524,6 +524,41 @@ const instance_Issue_access_token = axios.create({
   },
 })
 
+async function getLineUserInfo(code) {
+  try {
+    const response_instance_Issue_access_token = await instance_Issue_access_token.post('/', {
+      'grant_type': 'authorization_code',
+      'code': code,
+      'redirect_uri': 'https://side-project-weather-end.herokuapp.com/api/auth/line/callback',
+      'client_id': process.env.LINE_LOGIN_CHANNEL_ID,
+      'client_secret': process.env.LINE_LOGIN_CHANNEL_SECRET
+    })
+    let messages = ''
+    messages = messages + `response_instance_Issue_access_token \n`
+    for (key in response_instance_Issue_access_token) {
+      messages = messages + `${key}: ${response_instance_Issue_access_token[key]} \n`
+    }
+    sendLine(messages)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+async function sendLine(messages) {
+  try {
+    const LINE_USER_ID = process.env.LINE_USER_ID
+    const LineResponse = await instance.post('/', {
+      to: LINE_USER_ID,
+      messages: [{
+        "type": "text",
+        "text": `${messages}`
+      }]
+    })
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 router.get('/api/auth/line/callback', async (req, res) => {
   try {
     // 會到 callback 這邊
@@ -544,25 +579,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
     messages = messages + `req.query.code: ${req.query.code} \n`
     messages = messages + `req.query.state: ${req.query.state} \n`
 
-    // const response_instance_Issue_access_token = await instance_Issue_access_token.post('/', {
-    //   'grant_type': 'authorization_code',
-    //   'code': req.query.code,
-    //   'redirect_uri': 'https://side-project-weather-end.herokuapp.com/api/auth/line/callback',
-    //   'client_id': process.env.LINE_LOGIN_CHANNEL_ID,
-    //   'client_secret': process.env.LINE_LOGIN_CHANNEL_SECRET
-    // })
-    // messages = messages + `response_instance_Issue_access_token \n`
-    // for (key in response_instance_Issue_access_token) {
-    //   messages = messages + `${key}: ${response_instance_Issue_access_token[key]} \n`
-    // }
-
-    // messages = messages + `response_instance_Issue_access_token \n`
-    // messages = messages + `access_token: ${response_instance_Issue_access_token.access_token} \n`
-    // messages = messages + `expires_in: ${response_instance_Issue_access_token.expires_in} \n`
-    // messages = messages + `id_token: ${response_instance_Issue_access_token.id_token} \n`
-    // messages = messages + `refresh_token: ${response_instance_Issue_access_token.refresh_token} \n`
-    // messages = messages + `scope: ${response_instance_Issue_access_token.scope} \n`
-    // messages = messages + `token_type: ${response_instance_Issue_access_token.token_type} \n`
+    getLineUserInfo(req.query.code)
 
     const LINE_USER_ID = process.env.LINE_USER_ID
     const LineResponse = await instance.post('/', {
