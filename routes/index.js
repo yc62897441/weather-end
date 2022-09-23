@@ -518,6 +518,7 @@ router.get('/api/auth/line', async (req, res) => {
 
 const instance_Issue_access_token = axios.create({
   baseURL: 'https://api.line.me/oauth2/v2.1/token',
+  timeout: 1000,
   headers: {
     "Content-Type": "application/x-www-form-urlencoded"
   },
