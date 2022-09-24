@@ -390,14 +390,37 @@ router.post('/api/users/signin', (req, res) => {
     })
 })
 
-router.get('/api/get_current_user', authenticated, (req, res) => {
-  // JWT驗證後從資料庫撈出的 req.user
-  // 這邊的資料屬性要和 /config/passport.js 定義的一致
-  return res.json({
-    id: req.user.id,
-    account: req.user.account
-    //  LINE_USER_ID: req.user.LINE_USER_ID
-  })
+router.get('/api/get_current_user', authenticated, async (req, res) => {
+  try {
+    // JWT驗證後從資料庫撈出的 req.user
+    // 這邊的資料屬性要和 /config/passport.js 定義的一致
+    let messages = ''
+    if (req.user) {
+      messages = messages + 'req.user \n'
+      for (key in req.user) {
+        messages = messages + `${key}: ${req.user[key]} \n`
+      }
+    } else {
+      messages = messages + 'No req.user \n'
+    }
+
+    const LINE_USER_ID = process.env.LINE_USER_ID
+    const LineResponse = await instance.post('/', {
+      to: LINE_USER_ID,
+      messages: [{
+        "type": "text",
+        "text": `${messages}`
+      }]
+    })
+
+    return res.json({
+      id: req.user.id,
+      account: req.user.account
+      //  LINE_USER_ID: req.user.LINE_USER_ID
+    })
+  } catch (error) {
+    console.log(error)
+  }
 })
 
 router.get('/api/users/userSave', authenticated, (req, res) => {
@@ -609,9 +632,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
         "text": `${messages}`
       }]
     })
-    return res.redirect('https://yc62897441.github.io/weather-front?authticate_Ok')
-    return res.redirect(`https://side-project-weather-end.herokuapp.com/token?code=${req.query.code}`)
-    return res.json({ status: 'success' })
+    return res.redirect('https://yc62897441.github.io/weather-front')
   } catch (error) {
     console.log(error)
     return res.redirect('https://yc62897441.github.io/weather-front?error')
