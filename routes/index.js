@@ -606,6 +606,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
       if (req.query.code) {
         messages = messages + `req.query.code: ${req.query.code} \n`
         const aa = await getLineUserInfo(req.query.code)
+        messages = messages + `aa: ${aa} \n`
       }
     }
 
