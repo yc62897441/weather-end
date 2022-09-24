@@ -529,7 +529,9 @@ async function getLineUserInfo(code) {
       client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
     }
 
-    // 這邊 post 會有問題
+    // [axios] 處理 x-www-form-urlencoded 格式問題
+    // https://jeremysu0131.github.io/axios-%E8%99%95%E7%90%86-x-www-form-urlencoded-%E6%A0%BC%E5%BC%8F%E5%95%8F%E9%A1%8C/
+    // axios 輸出的數據是 json 格式，若我們要轉換成 x-www-form-urlencoded 格式，則需要安裝 qs 這個額外套件
     const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
       Headers: {
         "Content-Type": "application/x-www-form-urlencoded"
@@ -590,6 +592,15 @@ router.get('/api/auth/line/callback', async (req, res) => {
         messages = messages + `req.query.code: ${req.query.code} \n`
         const aa = await getLineUserInfo(req.query.code)
       }
+    }
+
+    if (req.user) {
+      messages = messages + 'req.user \n'
+      for (key in req.user) {
+        messages = messages + `${key}: ${req.user[key]} \n`
+      }
+    } else {
+      messages = messages + 'No req.user \n'
     }
 
     const LINE_USER_ID = process.env.LINE_USER_ID
