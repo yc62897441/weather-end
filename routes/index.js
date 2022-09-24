@@ -616,11 +616,11 @@ router.get('/api/auth/line/callback', async (req, res) => {
           client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
         }
 
-        const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
-          Headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          }
-        })
+        // const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
+        //   Headers: {
+        //     "Content-Type": "application/x-www-form-urlencoded"
+        //   }
+        // })
 
         // if (response) {
         //   message = message + 'response \n'
@@ -650,12 +650,29 @@ router.get('/api/auth/line/callback', async (req, res) => {
       }]
     })
 
-    return res.redirect('https://yc62897441.github.io/weather-front?authticate_Ok')
+    return res.redirect('https://side-project-weather-end.herokuapp.com/token')
     return res.json({ status: 'success' })
   } catch (error) {
     console.log(error)
     return res.redirect('https://yc62897441.github.io/weather-front?error')
   }
 })
+
+router.get('/token', async (req, res) => {
+
+  return res.redirect('https://yc62897441.github.io/weather-front?authticate_Ok')
+  // try {
+  //   const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
+  //     Headers: {
+  //       "Content-Type": "application/x-www-form-urlencoded"
+  //     }
+  //   })
+
+
+  // } catch (error) {
+  //   console.log(error)
+  // }
+})
+
 
 module.exports = router
