@@ -552,7 +552,7 @@ async function getLineUserInfo(code) {
     //     message = message + `${key} \n`
     //   }
     // }
-    sendLine(message)
+    return await sendLine(message)
     // const response = await axios.post('https://api.line.me/oauth2/v2.1/token', {
     //   grant_type: 'authorization_code',
     //   code: code,
@@ -579,6 +579,7 @@ async function sendLine(message) {
         "text": `${message}`
       }]
     })
+    return true
   } catch (error) {
     console.log(error)
   }
@@ -604,7 +605,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
       }
       if (req.query.code) {
         messages = messages + `req.query.code: ${req.query.code} \n`
-        getLineUserInfo(req.query.code)
+        const aa = await getLineUserInfo(req.query.code)
       }
     }
 
