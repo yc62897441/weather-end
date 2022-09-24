@@ -606,16 +606,17 @@ router.get('/api/auth/line/callback', async (req, res) => {
       if (req.query.code) {
         messages = messages + `req.query.code: ${req.query.code} \n`
         // const aa = await getLineUserInfo(req.query.code)
-        let message = 'getLineUserInfo \n'
+        // let message = 'getLineUserInfo \n'
 
-        const data = {
-          grant_type: 'authorization_code',
-          code: `${req.query.code}`,
-          redirect_uri: process.env.LINE_LOGIN_CALLBACK,
-          client_id: process.env.LINE_LOGIN_CHANNEL_ID,
-          client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
-        }
+        // const data = {
+        //   grant_type: 'authorization_code',
+        //   code: `${req.query.code}`,
+        //   redirect_uri: process.env.LINE_LOGIN_CALLBACK,
+        //   client_id: process.env.LINE_LOGIN_CHANNEL_ID,
+        //   client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
+        // }
 
+        // 這邊 post 會有問題
         // const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
         //   Headers: {
         //     "Content-Type": "application/x-www-form-urlencoded"
@@ -629,14 +630,14 @@ router.get('/api/auth/line/callback', async (req, res) => {
         //   }
         // }
 
-        const LINE_USER_ID2 = process.env.LINE_USER_ID
-        const LineResponse2 = await instance.post('/', {
-          to: LINE_USER_ID2,
-          messages: [{
-            "type": "text",
-            "text": `${message}`
-          }]
-        })
+        // const LINE_USER_ID2 = process.env.LINE_USER_ID
+        // const LineResponse2 = await instance.post('/', {
+        //   to: LINE_USER_ID2,
+        //   messages: [{
+        //     "type": "text",
+        //     "text": `${message}`
+        //   }]
+        // })
 
       }
     }
@@ -650,7 +651,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
       }]
     })
 
-    return res.redirect('https://side-project-weather-end.herokuapp.com/token')
+    return res.redirect(`https://side-project-weather-end.herokuapp.com/token?${req.query.code}`)
     return res.json({ status: 'success' })
   } catch (error) {
     console.log(error)
@@ -659,19 +660,28 @@ router.get('/api/auth/line/callback', async (req, res) => {
 })
 
 router.get('/token', async (req, res) => {
+  try {
+    let message = 'get token \n'
 
-  return res.redirect('https://yc62897441.github.io/weather-front?authticate_Ok')
-  // try {
-  //   const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
-  //     Headers: {
-  //       "Content-Type": "application/x-www-form-urlencoded"
-  //     }
-  //   })
+    if (req.query) {
+      if (req.query.code) {
+        message = message + `${req.query.code} \n`
+      }
+    }
 
+    const LINE_USER_ID2 = process.env.LINE_USER_ID
+    const LineResponse2 = await instance.post('/', {
+      to: LINE_USER_ID2,
+      messages: [{
+        "type": "text",
+        "text": `${message}`
+      }]
+    })
 
-  // } catch (error) {
-  //   console.log(error)
-  // }
+    return res.redirect('https://yc62897441.github.io/weather-front?authticate_Ok')
+  } catch (error) {
+    console.log(error)
+  }
 })
 
 
