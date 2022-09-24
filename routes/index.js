@@ -574,7 +574,7 @@ async function sendLine(message) {
     const LINE_USER_ID = process.env.LINE_USER_ID
     const LineResponse = await instance.post('/', {
       to: LINE_USER_ID,
-      message: [{
+      messages: [{
         "type": "text",
         "text": `${message}`
       }]
@@ -605,18 +605,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
       }
       if (req.query.code) {
         messages = messages + `req.query.code: ${req.query.code} \n`
-        //  const aa = await getLineUserInfo(req.query.code)
-        let message = 'getLineUserInfo \n'
-
-        const LINE_USER_ID2 = process.env.LINE_USER_ID
-        const LineResponse2 = await instance.post('/', {
-          to: LINE_USER_ID2,
-          messages: [{
-            "type": "text",
-            "text": `${message}`
-          }]
-        })
-
+        const aa = await getLineUserInfo(req.query.code)
       }
     }
 
