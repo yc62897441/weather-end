@@ -5,6 +5,11 @@ const axios = require('axios')
 let CWBAuthorization = process.env.CWBAuthorization
 let CWBbaseURL = 'https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/'
 
+// [axios] 處理 x-www-form-urlencoded 格式問題
+// https://jeremysu0131.github.io/axios-%E8%99%95%E7%90%86-x-www-form-urlencoded-%E6%A0%BC%E5%BC%8F%E5%95%8F%E9%A1%8C/
+// axios 輸出的數據是 json 格式，若我們要轉換成 x-www-form-urlencoded 格式，則需要安裝 qs 這個額外套件
+const Qs = require('qs')
+
 const bcrypt = require('bcryptjs')
 const db = require('../models')
 const User = db.User
@@ -576,29 +581,16 @@ async function sendLine(messages) {
   }
 }
 
-router.get('/api/auth/line/callback/token', async (req, res) => {
-  try {
-    // 傳送訊息
-    let messages = 'path: /api/auth/line/callback/token \n'
-
-    const LINE_USER_ID = process.env.LINE_USER_ID
-    const LineResponse = await instance.post('/', {
-      to: LINE_USER_ID,
-      messages: [{
-        "type": "text",
-        "text": `${messages}`
-      }]
-    })
-  } catch (error) {
-    console.log(error)
-  }
-})
+const data = {
+  grant_type: 'authorization_code',
+  code: '',
+  redirect_uri: process.env.LINE_LOGIN_CALLBACK,
+  client_id: process.env.LINE_LOGIN_CHANNEL_ID,
+  client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
+}
 
 router.get('/api/auth/line/callback', async (req, res) => {
   try {
-    // 可以拿到 req.query.code
-    // 用 POSTMAN 可以拿到 access token 但這裡不行
-
     // 傳送訊息
     let messages = 'path: /api/auth/line/callback \n'
 
@@ -614,14 +606,25 @@ router.get('/api/auth/line/callback', async (req, res) => {
     if (req.query) {
       if (req.query.code) {
         messages = messages + `req.query.code: ${req.query.code} \n`
+        data.code = req.query.code
       }
       if (req.query.state) {
         messages = messages + `req.query.state: ${req.query.state} \n`
       }
-    }  
-   
+    }
 
-    // getLineUserInfo(req.query.code)
+
+    const response = await axios.post('http://localhost:3050/', Qs.stringify(data), {
+      Headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      }
+    })
+    if (response) {
+      messages = messages + 'response \n'
+      for (key in response) {
+        messages = messages + `${key} \n`
+      }
+    }
 
     const LINE_USER_ID = process.env.LINE_USER_ID
     const LineResponse = await instance.post('/', {
