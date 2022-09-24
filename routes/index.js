@@ -607,26 +607,27 @@ router.get('/api/auth/line/callback', async (req, res) => {
         messages = messages + `req.query.code: ${req.query.code} \n`
         // const aa = await getLineUserInfo(req.query.code)
         let message = 'getLineUserInfo \n'
-        const data = {
-          grant_type: 'authorization_code',
-          code: `${code}`,
-          redirect_uri: process.env.LINE_LOGIN_CALLBACK,
-          client_id: process.env.LINE_LOGIN_CHANNEL_ID,
-          client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
-        }
 
-        const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
-          Headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          }
-        })
+        // const data = {
+        //   grant_type: 'authorization_code',
+        //   code: `${code}`,
+        //   redirect_uri: process.env.LINE_LOGIN_CALLBACK,
+        //   client_id: process.env.LINE_LOGIN_CHANNEL_ID,
+        //   client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
+        // }
 
-        if (response) {
-          message = message + 'response \n'
-          for (key in response) {
-            message = message + `${key} \n`
-          }
-        }
+        // const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
+        //   Headers: {
+        //     "Content-Type": "application/x-www-form-urlencoded"
+        //   }
+        // })
+
+        // if (response) {
+        //   message = message + 'response \n'
+        //   for (key in response) {
+        //     message = message + `${key} \n`
+        //   }
+        // }
 
         const LINE_USER_ID2 = process.env.LINE_USER_ID
         const LineResponse2 = await instance.post('/', {
@@ -636,7 +637,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
             "text": `${message}`
           }]
         })
-        
+
       }
     }
 
