@@ -549,28 +549,28 @@ async function getLineUserInfo(code) {
     }
 
     const jwt = response.data.id_token
-    const secretKey = 'secret'
+    message = message + `jwt: ${jwt} \n`
+    // const secretKey = 'secret'
+    // const { payload, protectedHeader } = await jose.jwtDecrypt(jwt, secretKey
+    //   // , {
+    //   //   issuer: 'urn:example:issuer',
+    //   //   audience: 'urn:example:audience',
+    //   // }
+    // )
 
-    const { payload, protectedHeader } = await jose.jwtDecrypt(jwt, secretKey
-      // , {
-      //   issuer: 'urn:example:issuer',
-      //   audience: 'urn:example:audience',
-      // }
-    )
+    // if (payload) {
+    //   message = message + 'payload \n'
+    //   // for (key in payload) {
+    //   //   message = message + `${key}: ${payload[key]} \n`
+    //   // }
+    // }
 
-    if (payload) {
-      message = message + 'payload \n'
-      // for (key in payload) {
-      //   message = message + `${key}: ${payload[key]} \n`
-      // }
-    }
-
-    if (protectedHeader) {
-      message = message + 'protectedHeader \n'
-      // for (key in payload) {
-      //   message = message + `${key}: ${payload[key]} \n`
-      // }
-    }
+    // if (protectedHeader) {
+    //   message = message + 'protectedHeader \n'
+    //   // for (key in payload) {
+    //   //   message = message + `${key}: ${payload[key]} \n`
+    //   // }
+    // }
 
     return await sendLine(message)
   } catch (error) {
@@ -599,50 +599,28 @@ router.get('/api/auth/line/callback', async (req, res) => {
     // 傳送訊息
     let messages = 'path: /api/auth/line/callback \n'
 
-    if (req.body) {
-      messages = messages + 'req.body \n'
-      for (key in req.body) {
-        messages = messages + `${key} \n`
-      }
-    } else {
-      messages = messages + 'No req.body \n'
-    }
-
     if (req.query) {
-      // 測試: 可否夾帶自定義參數
-      if (req.query.aaa) {
-        messages = messages + `req.query.aaa: ${req.query.aaa} \n`
-      }
       if (req.query.state) {
         messages = messages + `req.query.state: ${req.query.state} \n`
 
-        const databaseFindUser = await User.findOne({ where: { account: req.query.state } })
-          .then(user => {
-            // user.update({
-            //   LINE_USER_ID: 
-            // })
-            return true
-          })
-          .catch(error => {
-            console.log(error)
-            return false
-          })
-        messages = messages + `databaseFindUser: ${databaseFindUser} \n`
-
+        // const databaseFindUser = await User.findOne({ where: { account: req.query.state } })
+        //   .then(user => {
+        //     // user.update({
+        //     //   LINE_USER_ID: 
+        //     // })
+        //     return true
+        //   })
+        //   .catch(error => {
+        //     console.log(error)
+        //     return false
+        //   })
+        // messages = messages + `databaseFindUser: ${databaseFindUser} \n`
       }
+
       if (req.query.code) {
         messages = messages + `req.query.code: ${req.query.code} \n`
         const aa = await getLineUserInfo(req.query.code)
       }
-    }
-
-    if (req.user) {
-      messages = messages + 'req.user \n'
-      for (key in req.user) {
-        messages = messages + `${key}: ${req.user[key]} \n`
-      }
-    } else {
-      messages = messages + 'No req.user \n'
     }
 
     const LINE_USER_ID = process.env.LINE_USER_ID
