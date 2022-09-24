@@ -665,8 +665,8 @@ router.get('/token', async (req, res) => {
 
     if (req.query) {
       if (req.query.code) {
-        message = message + `${req.query.code} \n`
         const code = req.query.code.trim()
+        message = message + `${code} \n`
         const data = {
           grant_type: 'authorization_code',
           code: req.query.code,
@@ -676,11 +676,11 @@ router.get('/token', async (req, res) => {
         }
 
         // 這邊 post 會有問題
-        const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
-          Headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          }
-        })
+        // const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
+        //   Headers: {
+        //     "Content-Type": "application/x-www-form-urlencoded"
+        //   }
+        // })
 
         // if (response) {
         //   message = message + 'response \n'
