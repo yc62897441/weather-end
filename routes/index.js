@@ -651,7 +651,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
       }]
     })
 
-    return res.redirect(`https://side-project-weather-end.herokuapp.com/token?${req.query.code}`)
+    return res.redirect(`https://side-project-weather-end.herokuapp.com/token?code=${req.query.code}`)
     return res.json({ status: 'success' })
   } catch (error) {
     console.log(error)
