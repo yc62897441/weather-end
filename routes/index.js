@@ -576,10 +576,28 @@ async function sendLine(messages) {
   }
 }
 
+router.get('/api/auth/line/callback/token', async (req, res) => {
+  try {
+    // 傳送訊息
+    let messages = 'path: /api/auth/line/callback/token \n'
+
+    const LINE_USER_ID = process.env.LINE_USER_ID
+    const LineResponse = await instance.post('/', {
+      to: LINE_USER_ID,
+      messages: [{
+        "type": "text",
+        "text": `${messages}`
+      }]
+    })
+  } catch (error) {
+    console.log(error)
+  }
+})
+
 router.get('/api/auth/line/callback', async (req, res) => {
   try {
-    // 會到 callback 這邊
-    // 看看怎麼可以拿到 user 資訊
+    // 可以拿到 req.query.code
+    // 用 POSTMAN 可以拿到 access token 但這裡不行
 
     // 傳送訊息
     let messages = 'path: /api/auth/line/callback \n'
@@ -596,7 +614,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
     messages = messages + `req.query.code: ${req.query.code} \n`
     messages = messages + `req.query.state: ${req.query.state} \n`
 
-    getLineUserInfo(req.query.code)
+    // getLineUserInfo(req.query.code)
 
     const LINE_USER_ID = process.env.LINE_USER_ID
     const LineResponse = await instance.post('/', {
