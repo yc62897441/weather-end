@@ -531,62 +531,57 @@ const instance_Issue_access_token = axios.create({
 
 async function getLineUserInfo(code) {
   try {
-    const response = await axios.post('https://api.line.me/oauth2/v2.1/token', {
+    let message = 'getLineUserInfo \n'
+    const data = {
       grant_type: 'authorization_code',
-      code: code,
-      redirect_uri: 'https://side-project-weather-end.herokuapp.com/api/auth/line/callback',
+      code: `${code}`,
+      redirect_uri: process.env.LINE_LOGIN_CALLBACK,
       client_id: process.env.LINE_LOGIN_CHANNEL_ID,
       client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
-    }, {
+    }
+
+    const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
       Headers: {
         "Content-Type": "application/x-www-form-urlencoded"
       }
     })
-    let message = 'asasd'
-    for (key in response) {
-      message = message + `${key} \n`
+
+    if (response) {
+      message = message + 'response \n'
+      for (key in response) {
+        message = message + `${key} \n`
+      }
     }
     sendLine(message)
-    return
-    const response_instance_Issue_access_token = await instance_Issue_access_token.post('/', {
-      'grant_type': 'authorization_code',
-      'code': code,
-      'redirect_uri': 'https://side-project-weather-end.herokuapp.com/api/auth/line/callback',
-      'client_id': process.env.LINE_LOGIN_CHANNEL_ID,
-      'client_secret': process.env.LINE_LOGIN_CHANNEL_SECRET
-    })
-    let messages = ''
-    messages = messages + `response_instance_Issue_access_token \n`
-    for (key in response_instance_Issue_access_token) {
-      messages = messages + `${key}: ${response_instance_Issue_access_token[key]} \n`
-    }
-    sendLine(messages)
+    // const response = await axios.post('https://api.line.me/oauth2/v2.1/token', {
+    //   grant_type: 'authorization_code',
+    //   code: code,
+    //   redirect_uri: 'https://side-project-weather-end.herokuapp.com/api/auth/line/callback',
+    //   client_id: process.env.LINE_LOGIN_CHANNEL_ID,
+    //   client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
+    // }, {
+    //   Headers: {
+    //     "Content-Type": "application/x-www-form-urlencoded"
+    //   }
+    // })
   } catch (error) {
     console.log(error)
   }
 }
 
-async function sendLine(messages) {
+async function sendLine(message) {
   try {
     const LINE_USER_ID = process.env.LINE_USER_ID
     const LineResponse = await instance.post('/', {
       to: LINE_USER_ID,
-      messages: [{
+      message: [{
         "type": "text",
-        "text": `${messages}`
+        "text": `${message}`
       }]
     })
   } catch (error) {
     console.log(error)
   }
-}
-
-const data = {
-  grant_type: 'authorization_code',
-  code: '',
-  redirect_uri: process.env.LINE_LOGIN_CALLBACK,
-  client_id: process.env.LINE_LOGIN_CHANNEL_ID,
-  client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
 }
 
 router.get('/api/auth/line/callback', async (req, res) => {
@@ -609,19 +604,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
       }
       if (req.query.code) {
         messages = messages + `req.query.code: ${req.query.code} \n`
-        
-        // data.code = req.query.code
-        // const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
-        //   Headers: {
-        //     "Content-Type": "application/x-www-form-urlencoded"
-        //   }
-        // })
-        // if (response) {
-        //   messages = messages + 'response \n'
-        //   for (key in response) {
-        //     messages = messages + `${key} \n`
-        //   }
-        // }
+        getLineUserInfo(req.query.code)
       }
     }
 
