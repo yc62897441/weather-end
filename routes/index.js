@@ -616,18 +616,18 @@ router.get('/api/auth/line/callback', async (req, res) => {
           client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
         }
 
-        const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
-          Headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          }
-        })
+        // const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
+        //   Headers: {
+        //     "Content-Type": "application/x-www-form-urlencoded"
+        //   }
+        // })
 
-        if (response) {
-          message = message + 'response \n'
-          for (key in response) {
-            message = message + `${key} \n`
-          }
-        }
+        // if (response) {
+        //   message = message + 'response \n'
+        //   for (key in response) {
+        //     message = message + `${key} \n`
+        //   }
+        // }
 
         const LINE_USER_ID2 = process.env.LINE_USER_ID
         const LineResponse2 = await instance.post('/', {
