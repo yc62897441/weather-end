@@ -532,26 +532,26 @@ const instance_Issue_access_token = axios.create({
 async function getLineUserInfo(code) {
   try {
     let message = 'getLineUserInfo \n'
-    const data = {
-      grant_type: 'authorization_code',
-      code: `${code}`,
-      redirect_uri: process.env.LINE_LOGIN_CALLBACK,
-      client_id: process.env.LINE_LOGIN_CHANNEL_ID,
-      client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
-    }
+    // const data = {
+    //   grant_type: 'authorization_code',
+    //   code: `${code}`,
+    //   redirect_uri: process.env.LINE_LOGIN_CALLBACK,
+    //   client_id: process.env.LINE_LOGIN_CHANNEL_ID,
+    //   client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
+    // }
 
-    const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
-      Headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      }
-    })
+    // const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
+    //   Headers: {
+    //     "Content-Type": "application/x-www-form-urlencoded"
+    //   }
+    // })
 
-    if (response) {
-      message = message + 'response \n'
-      for (key in response) {
-        message = message + `${key} \n`
-      }
-    }
+    // if (response) {
+    //   message = message + 'response \n'
+    //   for (key in response) {
+    //     message = message + `${key} \n`
+    //   }
+    // }
     sendLine(message)
     // const response = await axios.post('https://api.line.me/oauth2/v2.1/token', {
     //   grant_type: 'authorization_code',
