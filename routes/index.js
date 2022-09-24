@@ -682,12 +682,14 @@ router.get('/token', async (req, res) => {
           }
         })
 
-        // if (response) {
-        //   message = message + 'response \n'
-        //   // for (key in response) {
-        //   //   message = message + `${key} \n`
-        //   // }
-        // }
+        if (response) {
+          message = message + 'response \n'
+          if (response.data) {
+            for (key in response.data) {
+              message = message + `${key}: ${response.data[key]}\n`
+            }
+          }
+        }
 
       }
     }
