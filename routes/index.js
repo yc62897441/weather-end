@@ -614,7 +614,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
     }
 
 
-    const response = await axios.post('http://localhost:3050/', Qs.stringify(data), {
+    const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
       Headers: {
         "Content-Type": "application/x-www-form-urlencoded"
       }
