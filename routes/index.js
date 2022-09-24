@@ -390,37 +390,14 @@ router.post('/api/users/signin', (req, res) => {
     })
 })
 
-router.get('/api/get_current_user', authenticated, async (req, res) => {
-  try {
-    // JWT驗證後從資料庫撈出的 req.user
-    // 這邊的資料屬性要和 /config/passport.js 定義的一致
-    let messages = ''
-    if (req.user) {
-      messages = messages + 'req.user \n'
-      for (key in req.user) {
-        messages = messages + `${key}: ${req.user[key]} \n`
-      }
-    } else {
-      messages = messages + 'No req.user \n'
-    }
-
-    const LINE_USER_ID = process.env.LINE_USER_ID
-    const LineResponse = await instance.post('/', {
-      to: LINE_USER_ID,
-      messages: [{
-        "type": "text",
-        "text": `${messages}`
-      }]
-    })
-
-    return res.json({
-      id: req.user.id,
-      account: req.user.account
-      //  LINE_USER_ID: req.user.LINE_USER_ID
-    })
-  } catch (error) {
-    console.log(error)
-  }
+router.get('/api/get_current_user', authenticated, (req, res) => {
+  // JWT驗證後從資料庫撈出的 req.user
+  // 這邊的資料屬性要和 /config/passport.js 定義的一致
+  return res.json({
+    id: req.user.id,
+    account: req.user.account
+    //  LINE_USER_ID: req.user.LINE_USER_ID
+  })
 })
 
 router.get('/api/users/userSave', authenticated, (req, res) => {
@@ -606,6 +583,10 @@ router.get('/api/auth/line/callback', async (req, res) => {
     }
 
     if (req.query) {
+      // 測試: 可否夾帶自定義參數
+      if (req.query.aaa) {
+        messages = messages + `req.query.aaa: ${req.query.aaa} \n`
+      }
       if (req.query.state) {
         messages = messages + `req.query.state: ${req.query.state} \n`
       }
@@ -638,55 +619,5 @@ router.get('/api/auth/line/callback', async (req, res) => {
     return res.redirect('https://yc62897441.github.io/weather-front?error')
   }
 })
-
-// router.get('/token', async (req, res) => {
-//   try {
-//     let message = 'get token \n'
-
-//     if (req.query) {
-//       if (req.query.code) {
-//         const code = req.query.code.trim()
-//         message = message + `${code} \n`
-//         const data = {
-//           grant_type: 'authorization_code',
-//           code: req.query.code,
-//           redirect_uri: process.env.LINE_LOGIN_CALLBACK,
-//           client_id: process.env.LINE_LOGIN_CHANNEL_ID,
-//           client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
-//         }
-
-//         // 這邊 post 會有問題
-//         const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
-//           Headers: {
-//             "Content-Type": "application/x-www-form-urlencoded"
-//           }
-//         })
-
-//         if (response) {
-//           message = message + 'response \n'
-//           if (response.data) {
-//             for (key in response.data) {
-//               message = message + `${key}: ${response.data[key]}\n`
-//             }
-//           }
-//         }
-
-//       }
-//     }
-
-//     const LINE_USER_ID2 = process.env.LINE_USER_ID
-//     const LineResponse2 = await instance.post('/', {
-//       to: LINE_USER_ID2,
-//       messages: [{
-//         "type": "text",
-//         "text": `${message}`
-//       }]
-//     })
-
-//     return res.redirect('https://yc62897441.github.io/weather-front?authticate_Ok')
-//   } catch (error) {
-//     console.log(error)
-//   }
-// })
 
 module.exports = router
