@@ -22,14 +22,14 @@ const JWT_SECRET = 'secret'
 
 // JWT 先註解起來
 // 進入其他需驗證路由的驗證
-// const passport = require('../config/passport')
-// const authenticated = passport.authenticate('jwt', { session: false })
+const passport = require('../config/passport')
+const authenticated = passport.authenticate('jwt', { session: false })
 
 
 // LINE-passport 以下三行測試可刪
-const passport = require('passport')
-const authenticated = function () { passport() }
-const { authenticator } = require('../middleware/auth') // 驗證登入狀態
+// const passport = require('passport')
+// const authenticated = function () { passport() }
+// const { authenticator } = require('../middleware/auth') // 驗證登入狀態
 
 // 定時撈取資料，並發送 Line 訊息
 // 設定 Line business messages axios、Line notify(專案沒使用這個)
@@ -396,6 +396,7 @@ router.get('/api/get_current_user', authenticated, (req, res) => {
   return res.json({
     id: req.user.id,
     account: req.user.account,
+    LINE_USER_ID: req.user.LINE_USER_ID
   })
 })
 
@@ -500,20 +501,17 @@ router.post('/api/users/offNotify', authenticated, (req, res) => {
 
 // 以下測試，可刪
 // 向 Facebook 發出請求，帶入的參數 scope: ['email', 'public_profile'] 是我們向 Facebook 要求的資料
-// app.get('/api/auth/line', passport.authenticate('line', {
-//   scope: ['profile', '20openid']
-// }))
-router.get('/api/auth/line', async (req, res) => {
-  try {
-    const response = await passport.authenticate('line', {
-      scope: ['profile', '20openid']
-    })
-    console.log('response', response)
-    return res.json({ data: response })
-  } catch (error) {
-    console.log(error)
-  }
-})
+// router.get('/api/auth/line', async (req, res) => {
+//   try {
+//     const response = await passport.authenticate('line', {
+//       scope: ['profile', '20openid']
+//     })
+//     console.log('response', response)
+//     return res.json({ data: response })
+//   } catch (error) {
+//     console.log(error)
+//   }
+// })
 
 // Line 把資料發回來
 
