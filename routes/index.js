@@ -666,10 +666,10 @@ router.get('/token', async (req, res) => {
     if (req.query) {
       if (req.query.code) {
         message = message + `${req.query.code} \n`
-
+        const code = req.query.code.trim()
         const data = {
           grant_type: 'authorization_code',
-          code: `${req.query.code}`,
+          code: req.query.code,
           redirect_uri: process.env.LINE_LOGIN_CALLBACK,
           client_id: process.env.LINE_LOGIN_CHANNEL_ID,
           client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
@@ -682,12 +682,12 @@ router.get('/token', async (req, res) => {
           }
         })
 
-        if (response) {
-          message = message + 'response \n'
-          // for (key in response) {
-          //   message = message + `${key} \n`
-          // }
-        }
+        // if (response) {
+        //   message = message + 'response \n'
+        //   // for (key in response) {
+        //   //   message = message + `${key} \n`
+        //   // }
+        // }
 
       }
     }
