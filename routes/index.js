@@ -395,8 +395,8 @@ router.get('/api/get_current_user', authenticated, (req, res) => {
   // 這邊的資料屬性要和 /config/passport.js 定義的一致
   return res.json({
     id: req.user.id,
-    account: req.user.account,
-    LINE_USER_ID: req.user.LINE_USER_ID
+    account: req.user.account
+    //  LINE_USER_ID: req.user.LINE_USER_ID
   })
 })
 
