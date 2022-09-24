@@ -589,6 +589,18 @@ router.get('/api/auth/line/callback', async (req, res) => {
       }
       if (req.query.state) {
         messages = messages + `req.query.state: ${req.query.state} \n`
+        const bb = await User.findOne({ where: { account: req.query.state } })
+          .then(user => {
+            if (user) {
+              for (key in user) {
+                messages = messages + `user.${key}: ${user[key]} \n`
+              }
+            }
+            return
+          })
+          .catch(error => {
+            console.log(error)
+          })
       }
       if (req.query.code) {
         messages = messages + `req.query.code: ${req.query.code} \n`
