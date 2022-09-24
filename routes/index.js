@@ -609,7 +609,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
         let message = 'getLineUserInfo \n'
 
         const LINE_USER_ID2 = process.env.LINE_USER_ID
-        const LineResponse = await instance.post('/', {
+        const LineResponse2 = await instance.post('/', {
           to: LINE_USER_ID2,
           message: [{
             "type": "text",
