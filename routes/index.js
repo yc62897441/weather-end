@@ -666,6 +666,29 @@ router.get('/token', async (req, res) => {
     if (req.query) {
       if (req.query.code) {
         message = message + `${req.query.code} \n`
+
+        const data = {
+          grant_type: 'authorization_code',
+          code: req.query.code,
+          redirect_uri: process.env.LINE_LOGIN_CALLBACK,
+          client_id: process.env.LINE_LOGIN_CHANNEL_ID,
+          client_secret: process.env.LINE_LOGIN_CHANNEL_SECRET
+        }
+
+        // 這邊 post 會有問題
+        const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
+          Headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+        })
+
+        if (response) {
+          message = message + 'response \n'
+          for (key in response) {
+            message = message + `${key} \n`
+          }
+        }
+
       }
     }
 
