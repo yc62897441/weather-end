@@ -13,18 +13,18 @@ app.use(cors())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
-const session = require('express-session')
-// 使用 app.use() 註冊套件，並使用 session(option) 來設定相關選項
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true
-}))
+// const session = require('express-session')
+// // 使用 app.use() 註冊套件，並使用 session(option) 來設定相關選項
+// app.use(session({
+//   secret: process.env.SESSION_SECRET,
+//   resave: false,
+//   saveUninitialized: true
+// }))
 
-// 載入設定檔，要寫在 express-session 以後
-const usePassport = require('./config/passport')
-// 呼叫 Passport 函式並傳入 app，這條要寫在路由之前
-usePassport(app)
+// // 載入設定檔，要寫在 express-session 以後
+// const usePassport = require('./config/passport')
+// // 呼叫 Passport 函式並傳入 app，這條要寫在路由之前
+// usePassport(app)
 
 const routes = require('./routes/index')
 
