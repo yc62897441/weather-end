@@ -25,9 +25,6 @@ const JWT_SECRET = 'secret'
 const passport = require('../config/passport')
 const authenticated = passport.authenticate('jwt', { session: false })
 
-// 解析 line 回傳的 jwt token
-const jwt = require('jsonwebtoken')
-
 // LINE-passport 以下三行測試可刪
 // const passport = require('passport')
 // const authenticated = function () { passport() }
