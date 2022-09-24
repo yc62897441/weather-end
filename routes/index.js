@@ -676,11 +676,11 @@ router.get('/token', async (req, res) => {
         }
 
         // 這邊 post 會有問題
-        // const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
-        //   Headers: {
-        //     "Content-Type": "application/x-www-form-urlencoded"
-        //   }
-        // })
+        const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
+          Headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+        })
 
         // if (response) {
         //   message = message + 'response \n'
