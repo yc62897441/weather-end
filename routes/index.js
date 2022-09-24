@@ -604,25 +604,24 @@ router.get('/api/auth/line/callback', async (req, res) => {
     }
 
     if (req.query) {
-      if (req.query.code) {
-        messages = messages + `req.query.code: ${req.query.code} \n`
-        data.code = req.query.code
-      }
       if (req.query.state) {
         messages = messages + `req.query.state: ${req.query.state} \n`
       }
-    }
+      if (req.query.code) {
+        messages = messages + `req.query.code: ${req.query.code} \n`
+        data.code = req.query.code
 
-
-    const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
-      Headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      }
-    })
-    if (response) {
-      messages = messages + 'response \n'
-      for (key in response) {
-        messages = messages + `${key} \n`
+        const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
+          Headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+        })
+        if (response) {
+          messages = messages + 'response \n'
+          for (key in response) {
+            messages = messages + `${key} \n`
+          }
+        }
       }
     }
 
