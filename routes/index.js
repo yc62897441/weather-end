@@ -611,8 +611,15 @@ router.get('/api/auth/line/callback', async (req, res) => {
       messages = messages + 'No req.body \n'
     }
 
-    messages = messages + `req.query.code: ${req.query.code} \n`
-    messages = messages + `req.query.state: ${req.query.state} \n`
+    if (req.query) {
+      if (req.query.code) {
+        messages = messages + `req.query.code: ${req.query.code} \n`
+      }
+      if (req.query.state) {
+        messages = messages + `req.query.state: ${req.query.state} \n`
+      }
+    }  
+   
 
     // getLineUserInfo(req.query.code)
 
