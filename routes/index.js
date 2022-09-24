@@ -25,6 +25,8 @@ const JWT_SECRET = 'secret'
 const passport = require('../config/passport')
 const authenticated = passport.authenticate('jwt', { session: false })
 
+// 解析 line 回傳的 jwt token
+const jose = require('jose')
 
 // LINE-passport 以下三行測試可刪
 // const passport = require('passport')
@@ -546,6 +548,30 @@ async function getLineUserInfo(code) {
       }
     }
 
+    const jwt = response.data.id_token
+    const secretKey = 'secret'
+
+    const { payload, protectedHeader } = await jose.jwtDecrypt(jwt, secretKey
+      // , {
+      //   issuer: 'urn:example:issuer',
+      //   audience: 'urn:example:audience',
+      // }
+    )
+
+    if (payload) {
+      message = message + 'payload \n'
+      // for (key in payload) {
+      //   message = message + `${key}: ${payload[key]} \n`
+      // }
+    }
+
+    if (protectedHeader) {
+      message = message + 'protectedHeader \n'
+      // for (key in payload) {
+      //   message = message + `${key}: ${payload[key]} \n`
+      // }
+    }
+
     return await sendLine(message)
   } catch (error) {
     console.log(error)
@@ -592,11 +618,9 @@ router.get('/api/auth/line/callback', async (req, res) => {
 
         const databaseFindUser = await User.findOne({ where: { account: req.query.state } })
           .then(user => {
-            if (user) {
-              for (key in user) {
-                messages = messages + `user.${key}: ${user[key]} \n`
-              }
-            }
+            // user.update({
+            //   LINE_USER_ID: 
+            // })
             return true
           })
           .catch(error => {
