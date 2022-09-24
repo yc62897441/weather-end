@@ -26,7 +26,7 @@ const passport = require('../config/passport')
 const authenticated = passport.authenticate('jwt', { session: false })
 
 // 解析 line 回傳的 jwt token
-const jose = require('jose')
+const jwt = require('jsonwebtoken')
 
 // LINE-passport 以下三行測試可刪
 // const passport = require('passport')
@@ -548,29 +548,12 @@ async function getLineUserInfo(code) {
       }
     }
 
-    const jwt = response.data.id_token
-    message = message + `jwt: ${jwt} \n`
-    // const secretKey = 'secret'
-    // const { payload, protectedHeader } = await jose.jwtDecrypt(jwt, secretKey
-    //   // , {
-    //   //   issuer: 'urn:example:issuer',
-    //   //   audience: 'urn:example:audience',
-    //   // }
-    // )
-
-    // if (payload) {
-    //   message = message + 'payload \n'
-    //   // for (key in payload) {
-    //   //   message = message + `${key}: ${payload[key]} \n`
-    //   // }
-    // }
-
-    // if (protectedHeader) {
-    //   message = message + 'protectedHeader \n'
-    //   // for (key in payload) {
-    //   //   message = message + `${key}: ${payload[key]} \n`
-    //   // }
-    // }
+    const token = response.data.id_token
+    const decoded = jwt.decode(token)
+    message = message + 'decoded \n'
+    for (key in decoded) {
+      message = message + `${key}: ${decoded[key]} \n`
+    }
 
     return await sendLine(message)
   } catch (error) {
