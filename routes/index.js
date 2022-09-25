@@ -20,15 +20,9 @@ const UserNotification = db.UserNotification
 const jwt = require('jsonwebtoken')
 const JWT_SECRET = 'secret'
 
-// JWT 先註解起來
 // 進入其他需驗證路由的驗證
 const passport = require('../config/passport')
 const authenticated = passport.authenticate('jwt', { session: false })
-
-// LINE-passport 以下三行測試可刪
-// const passport = require('passport')
-// const authenticated = function () { passport() }
-// const { authenticator } = require('../middleware/auth') // 驗證登入狀態
 
 // 定時撈取資料，並發送 Line 訊息
 // 設定 Line business messages axios、Line notify(專案沒使用這個)
@@ -498,21 +492,39 @@ router.post('/api/users/offNotify', authenticated, (req, res) => {
     })
 })
 
-// 以下測試，可刪
-// 向 Facebook 發出請求，帶入的參數 scope: ['email', 'public_profile'] 是我們向 Facebook 要求的資料
-// router.get('/api/auth/line', async (req, res) => {
-//   try {
-//     const response = await passport.authenticate('line', {
-//       scope: ['profile', '20openid']
-//     })
-//     console.log('response', response)
-//     return res.json({ data: response })
-//   } catch (error) {
-//     console.log(error)
-//   }
-// })
+// Line Login 把資料發回來
+router.get('/api/auth/line/callback', async (req, res) => {
+  try {
+    // 開發檢視用，建立處理訊息，傳送給自己的 LINE 看各階段處理狀況、資料取得情況
+    let messages = 'path: /api/auth/line/callback \n'
 
-// Line 把資料發回來
+    // 
+    if (req.query) {
+      if (req.query.state && req.query.code) {
+        messages = messages + `req.query.state: ${req.query.state} \n`
+        messages = messages + `req.query.code: ${req.query.code} \n`
+        const getLineUserInfoResult = await getLineUserInfo(req.query.code, req.query.state.trim())
+        messages = messages + `getLineUserInfoResult: ${getLineUserInfoResult} \n`
+      }
+    }
+
+    // 開發檢視用，傳送給自己的 LINE
+    const LINE_USER_ID = process.env.LINE_USER_ID
+    const LineResponse = await instance.post('/', {
+      to: LINE_USER_ID,
+      messages: [{
+        "type": "text",
+        "text": `${messages}`
+      }]
+    })
+
+    // 成功: redirect
+    return res.redirect('https://yc62897441.github.io/weather-front')
+  } catch (error) {
+    console.log(error)
+    return res.redirect('https://yc62897441.github.io/weather-front?error')
+  }
+})
 
 async function getLineUserInfo(code, state) {
   try {
@@ -581,38 +593,5 @@ async function sendLine(message) {
     console.log(error)
   }
 }
-
-router.get('/api/auth/line/callback', async (req, res) => {
-  try {
-    // 開發檢視用，建立處理訊息，傳送給自己的 LINE 看各階段處理狀況、資料取得情況
-    let messages = 'path: /api/auth/line/callback \n'
-
-    // 
-    if (req.query) {
-      if (req.query.state && req.query.code) {
-        messages = messages + `req.query.state: ${req.query.state} \n`
-        messages = messages + `req.query.code: ${req.query.code} \n`
-        const aa = await getLineUserInfo(req.query.code, req.query.state.trim())
-        messages = messages + `aa: ${aa} \n`
-      }
-    }
-
-    // 開發檢視用，傳送給自己的 LINE
-    const LINE_USER_ID = process.env.LINE_USER_ID
-    const LineResponse = await instance.post('/', {
-      to: LINE_USER_ID,
-      messages: [{
-        "type": "text",
-        "text": `${messages}`
-      }]
-    })
-
-    // 成功: redirect
-    return res.redirect('https://yc62897441.github.io/weather-front')
-  } catch (error) {
-    console.log(error)
-    return res.redirect('https://yc62897441.github.io/weather-front?error')
-  }
-})
 
 module.exports = router
