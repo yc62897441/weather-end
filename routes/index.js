@@ -570,8 +570,12 @@ async function getLineUserInfo(code, state) {
         console.log(error)
         return { status: 'User.findOne Error' }
       })
-    for (key in databaseResult) {
-      message = message + `${key}: ${databaseResult[key]} \n`
+    if (databaseResult) {
+      for (key in databaseResult) {
+        message = message + `${key}: ${databaseResult[key]} \n`
+      }
+    } else {
+      message = message + `databaseResult undefined ${databaseResult}\n`
     }
 
     return await sendLine(message)
