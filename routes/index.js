@@ -514,7 +514,7 @@ router.post('/api/users/offNotify', authenticated, (req, res) => {
 
 // Line 把資料發回來
 
-async function getLineUserInfo(code) {
+async function getLineUserInfo(code, state) {
   try {
     let message = 'getLineUserInfo \n'
 
@@ -545,11 +545,33 @@ async function getLineUserInfo(code) {
       }
     }
 
+    // 可以從 id_token 解析出 line user 的資訊，接下來把 line user id 存到資料庫中了
     const token = response.data.id_token
     const decoded = jwt.decode(token)
     message = message + 'decoded \n'
     for (key in decoded) {
       message = message + `${key}: ${decoded[key]} \n`
+    }
+
+    const databaseResult = await User.findOne({ where: { account: state } })
+      .then(user => {
+        user.update({
+          LINE_USER_ID: decoded.sub
+        })
+          .then(user => {
+            user = {
+              account: user.account,
+              LINE_USER_ID: user.LINE_USER_ID
+            }
+            return user
+          })
+      })
+      .catch(error => {
+        console.log(error)
+        return { status: 'User.findOne Error' }
+      })
+    for (key in databaseResult) {
+      message = message + `${key}: ${databaseResult[key]} \n`
     }
 
     return await sendLine(message)
@@ -598,8 +620,9 @@ router.get('/api/auth/line/callback', async (req, res) => {
       }
 
       if (req.query.code) {
+        let state = req.query.state.trim() || null
         messages = messages + `req.query.code: ${req.query.code} \n`
-        const aa = await getLineUserInfo(req.query.code)
+        const aa = await getLineUserInfo(req.query.code, state)
       }
     }
 
