@@ -369,6 +369,13 @@ router.post('/api/users/signin', (req, res) => {
       const payload = { id: user.id }
       const token = jwt.sign(payload, JWT_SECRET)
 
+      // 只回傳必要資訊，其他如 password、createdAt 就不需要回傳到前端
+      user = {
+        id: user.id,
+        account: user.account,
+        LINE_USER_ID: user.LINE_USER_ID || null
+      }
+
       // 回傳訊息、token、user data
       return res.json({
         status: 'success',
@@ -388,8 +395,8 @@ router.get('/api/get_current_user', authenticated, (req, res) => {
   // 這邊的資料屬性要和 /config/passport.js 定義的一致
   return res.json({
     id: req.user.id,
-    account: req.user.account
-    //  LINE_USER_ID: req.user.LINE_USER_ID
+    account: req.user.account,
+    LINE_USER_ID: req.user.LINE_USER_ID || null
   })
 })
 
