@@ -521,7 +521,8 @@ router.get('/api/auth/line/callback', async (req, res) => {
     // })
 
     // 成功: redirect
-    return res.redirect('https://yc62897441.github.io/weather-front')
+    return res.redirect('https://yc62897441.github.io/weather-front/#/?aaa=abc')
+    // return res.redirect('https://yc62897441.github.io/weather-front')
   } catch (error) {
     console.log(error)
     return res.redirect('https://yc62897441.github.io/weather-front?error')
