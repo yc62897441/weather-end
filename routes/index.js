@@ -559,26 +559,19 @@ async function getLineUserInfo(code, state) {
           LINE_USER_ID: decoded.sub
         })
           .then(user => {
-            user = {
-              account: user.account,
-              LINE_USER_ID: user.LINE_USER_ID
-            }
-            return user
+            message = message + `user.account: ${user.account} \n`
+            message = message + `user.LINE_USER_ID: ${user.LINE_USER_ID} \n`
+            return sendLine(message)
           })
       })
       .catch(error => {
         console.log(error)
-        return { status: 'User.findOne Error' }
+        // return { status: 'User.findOne Error' }
+        message = message + `User.findOne Error \n`
+        return sendLine(message)
       })
-    if (databaseResult) {
-      for (key in databaseResult) {
-        message = message + `${key}: ${databaseResult[key]} \n`
-      }
-    } else {
-      message = message + `databaseResult undefined ${databaseResult}\n`
-    }
 
-    return await sendLine(message)
+    // return await sendLine(message)
   } catch (error) {
     console.log(error)
   }
