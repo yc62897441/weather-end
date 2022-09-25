@@ -516,8 +516,10 @@ router.post('/api/users/offNotify', authenticated, (req, res) => {
 
 async function getLineUserInfo(code, state) {
   try {
+    // 開發檢視用，建立處理訊息，傳送給自己的 LINE 看各階段處理狀況、資料取得情況
     let message = 'getLineUserInfo \n'
 
+    // 透過 code (authorization code) 向 Line platform request 使用者資料(line user)
     const data = {
       grant_type: 'authorization_code',
       code: code.trim(),
@@ -529,49 +531,33 @@ async function getLineUserInfo(code, state) {
     // [axios] 處理 x-www-form-urlencoded 格式問題
     // https://jeremysu0131.github.io/axios-%E8%99%95%E7%90%86-x-www-form-urlencoded-%E6%A0%BC%E5%BC%8F%E5%95%8F%E9%A1%8C/
     // axios 輸出的數據是 json 格式，若我們要轉換成 x-www-form-urlencoded 格式，則需要安裝 qs 這個額外套件
+    // 取得回傳資料
     const response = await axios.post('https://api.line.me/oauth2/v2.1/token', Qs.stringify(data), {
       Headers: {
         "Content-Type": "application/x-www-form-urlencoded"
       }
     })
 
-    if (response) {
-      message = message + 'response \n'
-      if (response.data) {
-        message = message + 'response.data \n'
-        for (key in response.data) {
-          message = message + `${key}: ${response.data[key]} \n`
-        }
-      }
-    }
-
-    // 可以從 id_token 解析出 line user 的資訊，接下來把 line user id 存到資料庫中了
+    // 可以從回傳資料中的 id_token 解析出 line user 的資訊，接下來把 line user id 存到資料庫中了
     const token = response.data.id_token
     const decoded = jwt.decode(token)
-    message = message + 'decoded \n'
-    for (key in decoded) {
-      message = message + `${key}: ${decoded[key]} \n`
-    }
 
+    // 把 line user id 存到資料庫中
+    // state 是 A unique alphanumeric string，Line 要求我們的 app 自隨機產生。這邊我在前端把 user account 帶給 state 當成值，所以現在可以用 state 去找到 user
     const databaseResult = await User.findOne({ where: { account: state } })
       .then(user => {
         user.update({
           LINE_USER_ID: decoded.sub
         })
-          .then(user => {
-            message = message + `user.account: ${user.account} \n`
-            message = message + `user.LINE_USER_ID: ${user.LINE_USER_ID} \n`
-            return sendLine(message)
-          })
+        message = message + `user.account: ${user.account} \n`
+        message = message + `user.LINE_USER_ID: ${user.LINE_USER_ID} \n`
+        return sendLine(message)
       })
       .catch(error => {
         console.log(error)
-        // return { status: 'User.findOne Error' }
         message = message + `User.findOne Error \n`
         return sendLine(message)
       })
-
-    // return await sendLine(message)
   } catch (error) {
     console.log(error)
   }
@@ -595,34 +581,19 @@ async function sendLine(message) {
 
 router.get('/api/auth/line/callback', async (req, res) => {
   try {
-    // 傳送訊息
+    // 開發檢視用，建立處理訊息，傳送給自己的 LINE 看各階段處理狀況、資料取得情況
     let messages = 'path: /api/auth/line/callback \n'
 
+    // 
     if (req.query) {
-      if (req.query.state) {
+      if (req.query.state && req.query.code) {
         messages = messages + `req.query.state: ${req.query.state} \n`
-
-        // const databaseFindUser = await User.findOne({ where: { account: req.query.state } })
-        //   .then(user => {
-        //     // user.update({
-        //     //   LINE_USER_ID: 
-        //     // })
-        //     return true
-        //   })
-        //   .catch(error => {
-        //     console.log(error)
-        //     return false
-        //   })
-        // messages = messages + `databaseFindUser: ${databaseFindUser} \n`
-      }
-
-      if (req.query.code) {
-        let state = req.query.state.trim() || null
         messages = messages + `req.query.code: ${req.query.code} \n`
-        const aa = await getLineUserInfo(req.query.code, state)
+        const aa = await getLineUserInfo(req.query.code, req.query.state.trim())
       }
     }
 
+    // 開發檢視用，傳送給自己的 LINE
     const LINE_USER_ID = process.env.LINE_USER_ID
     const LineResponse = await instance.post('/', {
       to: LINE_USER_ID,
@@ -631,6 +602,8 @@ router.get('/api/auth/line/callback', async (req, res) => {
         "text": `${messages}`
       }]
     })
+
+    // 成功: redirect
     return res.redirect('https://yc62897441.github.io/weather-front')
   } catch (error) {
     console.log(error)
