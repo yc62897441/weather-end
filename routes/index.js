@@ -495,28 +495,30 @@ router.post('/api/users/offNotify', authenticated, (req, res) => {
 // Line Login 把資料發回來
 router.get('/api/auth/line/callback', async (req, res) => {
   try {
-    // 開發檢視用，建立處理訊息，傳送給自己的 LINE 看各階段處理狀況、資料取得情況
-    let messages = 'path: /api/auth/line/callback \n'
+    // 先註解起來：開發檢視用，建立處理訊息，傳送給自己的 LINE 看各階段處理狀況、資料取得情況
+    // let messages = 'path: /api/auth/line/callback \n'
 
     // 
     if (req.query) {
       if (req.query.state && req.query.code) {
-        messages = messages + `req.query.state: ${req.query.state} \n`
-        messages = messages + `req.query.code: ${req.query.code} \n`
+        // messages = messages + `req.query.state: ${req.query.state} \n`
+        // messages = messages + `req.query.code: ${req.query.code} \n`
         const getLineUserInfoResult = await getLineUserInfo(req.query.code, req.query.state.trim())
-        messages = messages + `getLineUserInfoResult: ${getLineUserInfoResult} \n`
+        // messages = messages + `getLineUserInfoResult: ${getLineUserInfoResult} \n`
       }
+    } else {
+      return res.redirect('https://yc62897441.github.io/weather-front?error')
     }
 
-    // 開發檢視用，傳送給自己的 LINE
-    const LINE_USER_ID = process.env.LINE_USER_ID
-    const LineResponse = await instance.post('/', {
-      to: LINE_USER_ID,
-      messages: [{
-        "type": "text",
-        "text": `${messages}`
-      }]
-    })
+    // 先註解起來：開發檢視用，傳送給自己的 LINE
+    // const LINE_USER_ID = process.env.LINE_USER_ID
+    // const LineResponse = await instance.post('/', {
+    //   to: LINE_USER_ID,
+    //   messages: [{
+    //     "type": "text",
+    //     "text": `${messages}`
+    //   }]
+    // })
 
     // 成功: redirect
     return res.redirect('https://yc62897441.github.io/weather-front')
@@ -528,8 +530,8 @@ router.get('/api/auth/line/callback', async (req, res) => {
 
 async function getLineUserInfo(code, state) {
   try {
-    // 開發檢視用，建立處理訊息，傳送給自己的 LINE 看各階段處理狀況、資料取得情況
-    let message = 'getLineUserInfo \n'
+    // 先註解起來：開發檢視用，建立處理訊息，傳送給自己的 LINE 看各階段處理狀況、資料取得情況
+    // let message = 'getLineUserInfo \n'
 
     // 透過 code (authorization code) 向 Line platform request 使用者資料(line user)
     const data = {
@@ -561,15 +563,15 @@ async function getLineUserInfo(code, state) {
         user.update({
           LINE_USER_ID: decoded.sub
         })
-        message = message + `user.account: ${user.account} \n`
-        message = message + `user.LINE_USER_ID: ${user.LINE_USER_ID} \n`
-        sendLine(message)
+        // message = message + `user.account: ${user.account} \n`
+        // message = message + `user.LINE_USER_ID: ${user.LINE_USER_ID} \n`
+        // sendLine(message)
         return 'DONE: databaseResult'
       })
       .catch(async (error) => {
         console.log(error)
-        message = message + `User.findOne Error \n`
-        sendLine(message)
+        // message = message + `User.findOne Error \n`
+        // sendLine(message)
         return 'ERROR: databaseResult'
       })
     return databaseResult
@@ -578,20 +580,21 @@ async function getLineUserInfo(code, state) {
   }
 }
 
-async function sendLine(message) {
-  try {
-    const LINE_USER_ID = process.env.LINE_USER_ID
-    const LineResponse = await instance.post('/', {
-      to: LINE_USER_ID,
-      messages: [{
-        "type": "text",
-        "text": `${message}`
-      }]
-    })
-    return 'DONE: sendLine'
-  } catch (error) {
-    console.log(error)
-  }
-}
+// 先註解起來：開發檢視用，建立處理訊息，傳送給自己的 LINE 看各階段處理狀況、資料取得情況
+// async function sendLine(message) {
+//   try {
+//     const LINE_USER_ID = process.env.LINE_USER_ID
+//     const LineResponse = await instance.post('/', {
+//       to: LINE_USER_ID,
+//       messages: [{
+//         "type": "text",
+//         "text": `${message}`
+//       }]
+//     })
+//     return 'DONE: sendLine'
+//   } catch (error) {
+//     console.log(error)
+//   }
+// }
 
 module.exports = router
