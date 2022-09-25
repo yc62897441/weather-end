@@ -11,6 +11,7 @@ let CWBbaseURL = 'https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/'
 const Qs = require('qs')
 
 const bcrypt = require('bcryptjs')
+const { Op } = require("sequelize")
 const db = require('../models')
 const User = db.User
 const UserSave = db.UserSave
@@ -194,7 +195,7 @@ const id_index_table = {
   D144: 150
 }
 // 定時器
-// const clock = setInterval(fetchDataAndNotify, 100000)
+const clock = setInterval(fetchDataAndNotify, 10000)
 async function fetchDataAndNotify() {
   try {
     // 抓取中央氣象局資料
@@ -202,7 +203,11 @@ async function fetchDataAndNotify() {
     const response = await axios.get(requestURL)
 
     // 找出所有有開啟的通知設定
-    UserNotification.findAll({ raw: true, nest: true, include: [User] })
+    UserNotification.findAll({
+      raw: true,
+      nest: true,
+      include: [{ model: User, where: { LINE_USER_ID: { [Op.not]: '' } } }]
+    })
       .then(async (userNotifications) => {
         try {
           Promise.all(userNotifications.map(item => {
@@ -217,22 +222,33 @@ async function fetchDataAndNotify() {
               let dt = new Date()
 
               // 傳送訊息
-              const LineResponse = instance.post('/', {
-                to: LINE_USER_ID,
-                messages: [{
-                  "type": "text",
-                  "text": `To: ${item.User.account}\nTime: ${dt}\n${message}`
-                }]
-              })
+              // 解決，如果 LINE_USER_ID 為空，或是 [UnhandledPromiseRejection: This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). The promise rejected with the reason "AxiosError: Request failed with status code 400".] { code: 'ERR_UNHANDLED_REJECTION' }
+              async function send() {
+                try {
+                  const LineResponse = await instance.post('/', {
+                    to: LINE_USER_ID,
+                    messages: [{
+                      "type": "text",
+                      "text": `To: ${item.User.account}\nTime: ${dt}\n${message}`
+                    }]
+                  })
+                  return LineResponse
+                } catch (error) {
+                  return
+                }
+              }
+              send()
             }
           }))
           return
         } catch (error) {
           console.warn(error)
+          return
         }
       })
   } catch (error) {
     console.warn(error)
+    return
   }
 }
 
