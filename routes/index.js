@@ -194,7 +194,7 @@ const id_index_table = {
   D144: 150
 }
 // 定時器
-// const clock = setInterval(fetchDataAndNotify, 10000)
+const clock = setInterval(fetchDataAndNotify, 100000)
 async function fetchDataAndNotify() {
   try {
     // 抓取中央氣象局資料
@@ -214,12 +214,14 @@ async function fetchDataAndNotify() {
               // 製作訊息 eg.小霸尖山 午後短暫雷陣雨。降雨機率 30%。溫度攝氏14度。寒冷。西北風 平均風速<= 1級(每秒2公尺)。相對濕度72%。
               let message = `${response.data.cwbopendata.dataset.locations.location[mountainIndex].locationName} \n${response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[10].time[0].elementValue.value}`
 
+              let dt = new Date()
+
               // 傳送訊息
               const LineResponse = instance.post('/', {
                 to: LINE_USER_ID,
                 messages: [{
                   "type": "text",
-                  "text": `To: ${item.User.account}\n ${message}`
+                  "text": `To: ${item.User.account}\nTime: ${dt}\n${message}`
                 }]
               })
             }
