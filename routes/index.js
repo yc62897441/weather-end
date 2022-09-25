@@ -545,18 +545,26 @@ async function getLineUserInfo(code, state) {
     // 把 line user id 存到資料庫中
     // state 是 A unique alphanumeric string，Line 要求我們的 app 自隨機產生。這邊我在前端把 user account 帶給 state 當成值，所以現在可以用 state 去找到 user
     const databaseResult = await User.findOne({ where: { account: state } })
-      .then(user => {
-        user.update({
-          LINE_USER_ID: decoded.sub
-        })
-        message = message + `user.account: ${user.account} \n`
-        message = message + `user.LINE_USER_ID: ${user.LINE_USER_ID} \n`
-        return sendLine(message)
+      .then(async (user) => {
+        try {
+          user.update({
+            LINE_USER_ID: decoded.sub
+          })
+          message = message + `user.account: ${user.account} \n`
+          message = message + `user.LINE_USER_ID: ${user.LINE_USER_ID} \n`
+          return await sendLine(message)
+        } catch (error) {
+          console.log(error)
+        }
       })
-      .catch(error => {
-        console.log(error)
-        message = message + `User.findOne Error \n`
-        return sendLine(message)
+      .catch(async (error) => {
+        try {
+          console.log(error)
+          message = message + `User.findOne Error \n`
+          return await sendLine(message)
+        } catch (error) {
+          console.log(error)
+        }
       })
   } catch (error) {
     console.log(error)
