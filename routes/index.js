@@ -573,7 +573,7 @@ async function sendLine(message) {
         "text": `${message}`
       }]
     })
-    return true
+    return 'DONE: sendLine'
   } catch (error) {
     console.log(error)
   }
@@ -590,6 +590,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
         messages = messages + `req.query.state: ${req.query.state} \n`
         messages = messages + `req.query.code: ${req.query.code} \n`
         const aa = await getLineUserInfo(req.query.code, req.query.state.trim())
+        messages = messages + `aa: ${aa} \n`
       }
     }
 
