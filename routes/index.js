@@ -252,7 +252,6 @@ async function fetchDataAndNotify() {
   }
 }
 
-
 // line webhook，處理聊天室的使用者事件，如follow、unfollow、message
 router.post('/api/line_webhook', async (req, res) => {
   try {
@@ -276,7 +275,7 @@ router.post('/api/line_webhook', async (req, res) => {
         message = '退訂成功'
         break
       case 'message':
-        message = 'www'
+        message = '您好~'
         break
     }
 
