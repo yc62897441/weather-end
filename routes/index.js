@@ -572,7 +572,7 @@ router.post('/api/users/offNotify', authenticated, (req, res) => {
 })
 
 // Line Login 把資料發回來
-router.get('/auth/line/callback', async (req, res) => {
+router.get('/api/auth/line/callback', async (req, res) => {
   try {
     if (req.query) {
       if (req.query.state && req.query.code) {
