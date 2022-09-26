@@ -256,8 +256,10 @@ async function fetchDataAndNotify() {
 // line webhook，處理聊天室的使用者事件，如follow、unfollow、message
 router.post('/api/line_webhook', async (req, res) => {
   try {
-    let LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
     let LINE_USER_ID = req.body.events[0].source.userId
+
+    // 設定 Line business messages axios
+    let LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
     let message = ''
     const instance = axios.create({
       baseURL: 'https://api.line.me/v2/bot/message/push',
@@ -273,10 +275,22 @@ router.post('/api/line_webhook', async (req, res) => {
         message = '成功加入好友'
         break
       case 'unfollow':
+        // unfollow: 刪除在 User 資料表中的 LINE_USER_ID
         message = '退訂成功'
+        User.findOne({ where: { LINE_USER_ID: LINE_USER_ID } })
+          .then(user => {
+            if (user) {
+              user.update({ LINE_USER_ID: '' })
+            }
+            return
+          })
+          .catch(error => {
+            console.log(error)
+            return
+          })
         break
       case 'message':
-        message = 'www'
+        message = '您好~'
         break
     }
 
@@ -289,8 +303,10 @@ router.post('/api/line_webhook', async (req, res) => {
         }
       ]
     })
+    return
   } catch (error) {
     console.log(error)
+    return
   }
   return
 
