@@ -256,17 +256,17 @@ async function fetchDataAndNotify() {
 // line webhook，處理聊天室的使用者事件，如follow、unfollow、message
 router.post('/api/line_webhook', async (req, res) => {
   try {
-    let LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
+    // let LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
     let LINE_USER_ID = req.body.events[0].source.userId
     let message = ''
-    const instance = axios.create({
-      baseURL: 'https://api.line.me/v2/bot/message/push',
-      timeout: 1000,
-      headers: {
-        Authorization: `Bearer ${LINE_CHANNEL_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-    })
+    // const instance = axios.create({
+    //   baseURL: 'https://api.line.me/v2/bot/message/push',
+    //   timeout: 1000,
+    //   headers: {
+    //     Authorization: `Bearer ${LINE_CHANNEL_TOKEN}`,
+    //     "Content-Type": "application/json",
+    //   },
+    // })
 
     switch (req.body.events[0].type) {
       case 'follow':
