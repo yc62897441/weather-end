@@ -1,8 +1,6 @@
 const express = require('express')
 const router = express.Router()
 
-const line = require('./modules/line')
-
 const axios = require('axios')
 let CWBAuthorization = process.env.CWBAuthorization
 let CWBbaseURL = 'https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/'
