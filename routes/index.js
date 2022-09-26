@@ -271,7 +271,7 @@ router.post('/line_webhook', async (req, res) => {
     }
 
     const LineResponse = await instance.post('/', {
-      to: user.LINE_USER_ID,
+      to: LINE_USER_ID,
       messages: [
         {
           "type": "text",
