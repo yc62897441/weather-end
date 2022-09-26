@@ -1,3 +1,6 @@
+const express = require('express')
+const router = express.Router()
+
 const axios = require('axios')
 // [axios] 處理 x-www-form-urlencoded 格式問題
 // https://jeremysu0131.github.io/axios-%E8%99%95%E7%90%86-x-www-form-urlencoded-%E6%A0%BC%E5%BC%8F%E5%95%8F%E9%A1%8C/
@@ -6,87 +9,84 @@ const Qs = require('qs')
 
 const jwt = require('jsonwebtoken')
 
-const db = require('../models')
+const db = require('../../models')
 const User = db.User
 
-const lineController = {
-  // line webhook，處理聊天室的使用者事件，如follow、unfollow、message
-  webhook: async (req, res) => {
-    try {
-      let LINE_USER_ID = req.body.events[0].source.userId
+// line webhook，處理聊天室的使用者事件，如follow、unfollow、message
+router.post('/line_webhook', async (req, res) => {
+  try {
+    let LINE_USER_ID = req.body.events[0].source.userId
 
-      // 設定 Line business messages axios
-      let LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
-      let message = ''
-      const instance = axios.create({
-        baseURL: 'https://api.line.me/v2/bot/message/push',
-        timeout: 1000,
-        headers: {
-          Authorization: `Bearer ${LINE_CHANNEL_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      })
+    // 設定 Line business messages axios
+    let LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
+    let message = ''
+    const instance = axios.create({
+      baseURL: 'https://api.line.me/v2/bot/message/push',
+      timeout: 1000,
+      headers: {
+        Authorization: `Bearer ${LINE_CHANNEL_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    })
 
-      switch (req.body.events[0].type) {
-        case 'follow':
-          message = '成功加入好友'
-          break
-        case 'unfollow':
-          // unfollow: 刪除在 User 資料表中的 LINE_USER_ID
-          message = '退訂成功'
-          User.findOne({ where: { LINE_USER_ID: LINE_USER_ID } })
-            .then(user => {
-              if (user) {
-                user.update({ LINE_USER_ID: '' })
-              }
-              return
-            })
-            .catch(error => {
-              console.log(error)
-              return
-            })
-          break
-        case 'message':
-          message = '您好~'
-          break
-      }
-
-      const LineResponse = await instance.post('/', {
-        to: LINE_USER_ID,
-        messages: [
-          {
-            "type": "text",
-            "text": message
-          }
-        ]
-      })
-      return
-    } catch (error) {
-      console.log(error)
-      return
+    switch (req.body.events[0].type) {
+      case 'follow':
+        message = '成功加入好友'
+        break
+      case 'unfollow':
+        // unfollow: 刪除在 User 資料表中的 LINE_USER_ID
+        message = '退訂成功'
+        User.findOne({ where: { LINE_USER_ID: LINE_USER_ID } })
+          .then(user => {
+            if (user) {
+              user.update({ LINE_USER_ID: '' })
+            }
+            return
+          })
+          .catch(error => {
+            console.log(error)
+            return
+          })
+        break
+      case 'message':
+        message = '您好~'
+        break
     }
-  },
-  // Line Login 把資料發回來
-  lineCallback: async (req, res) => {
-    try {
-      if (req.query) {
-        if (req.query.state && req.query.code) {
-          const getLineUserInfoResult = await getLineUserInfo(req.query.code, req.query.state.trim())
+
+    const LineResponse = await instance.post('/', {
+      to: LINE_USER_ID,
+      messages: [
+        {
+          "type": "text",
+          "text": message
         }
-      } else {
-        return res.redirect('https://yc62897441.github.io/weather-front?error')
-      }
-
-      // 成功: redirect
-      return res.redirect('https://yc62897441.github.io/weather-front/#/?success_message=Line_login_success')
-    } catch (error) {
-      console.log(error)
-      return res.redirect('https://yc62897441.github.io/weather-front/#/?error_message=Line_login_fail')
-    }
+      ]
+    })
+    return
+  } catch (error) {
+    console.log(error)
+    return
   }
-}
+})
 
-module.exports = lineController
+// Line Login 把資料發回來
+router.get('/auth/line/callback', async (req, res) => {
+  try {
+    if (req.query) {
+      if (req.query.state && req.query.code) {
+        const getLineUserInfoResult = await getLineUserInfo(req.query.code, req.query.state.trim())
+      }
+    } else {
+      return res.redirect('https://yc62897441.github.io/weather-front?error')
+    }
+
+    // 成功: redirect
+    return res.redirect('https://yc62897441.github.io/weather-front/#/?success_message=Line_login_success')
+  } catch (error) {
+    console.log(error)
+    return res.redirect('https://yc62897441.github.io/weather-front/#/?error_message=Line_login_fail')
+  }
+})
 
 async function getLineUserInfo(code, state) {
   try {
@@ -156,3 +156,5 @@ async function getLineUserInfo(code, state) {
 //     console.log(error)
 //   }
 // }
+
+module.exports = router

@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const lineController = require('../controllers/lineController')
+const line = require('./modules/line')
 
 const axios = require('axios')
 let CWBAuthorization = process.env.CWBAuthorization
@@ -249,6 +249,7 @@ async function fetchDataAndNotify() {
   }
 }
 
+router.use('/api/line', line)
 // line webhook，處理聊天室的使用者事件，如follow、unfollow、message
 router.post('/api/line_webhook', lineController.webhook)
 // Line Login 把資料發回來
