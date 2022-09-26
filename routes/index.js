@@ -253,8 +253,8 @@ async function fetchDataAndNotify() {
 }
 
 
-// 處理從 Line webhook 收到的 event，follow、message、unfollow
-router.post('/', (req, res) => {
+// line webhook，處理聊天室的使用者事件，如follow、unfollow、message
+router.post('/line_webhook', (req, res) => {
   let UserId = req.user.id
 
   // 設定 Line business messages axios
