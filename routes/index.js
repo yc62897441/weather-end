@@ -195,7 +195,7 @@ const id_index_table = {
   D144: 150
 }
 // 定時器
-const clock = setInterval(fetchDataAndNotify, 10000)
+// const clock = setInterval(fetchDataAndNotify, 10000)
 async function fetchDataAndNotify() {
   try {
     // 抓取中央氣象局資料
@@ -258,8 +258,7 @@ router.post('/api/line_webhook', async (req, res) => {
     let LINE_USER_ID = req.body.events[0].source.userId
 
     // 設定 Line business messages axios
-    let LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
-    let message = ''
+    const LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
     const instance = axios.create({
       baseURL: 'https://api.line.me/v2/bot/message/push',
       timeout: 1000,
@@ -268,6 +267,8 @@ router.post('/api/line_webhook', async (req, res) => {
         "Content-Type": "application/json",
       },
     })
+
+    let message = ''
 
     switch (req.body.events[0].type) {
       case 'follow':
@@ -307,74 +308,74 @@ router.post('/api/line_webhook', async (req, res) => {
     console.log(error)
     return
   }
-  return
+  // return
 
-  let UserId = req.user.id
+  // let UserId = req.user.id
 
-  // 設定 Line business messages axios
-  const LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
-  const instance = axios.create({
-    baseURL: 'https://api.line.me/v2/bot/message/push',
-    timeout: 1000,
-    headers: {
-      Authorization: `Bearer ${LINE_CHANNEL_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-  })
+  // // 設定 Line business messages axios
+  // const LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
+  // const instance = axios.create({
+  //   baseURL: 'https://api.line.me/v2/bot/message/push',
+  //   timeout: 1000,
+  //   headers: {
+  //     Authorization: `Bearer ${LINE_CHANNEL_TOKEN}`,
+  //     "Content-Type": "application/json",
+  //   },
+  // })
 
-  // event 類型: follow、message、unfollow
-  if (req.body.events[0].type === 'follow') {
-    // follow: 儲存 LINE_USER_ID 到 User 資料表中，傳給使用者 "已加入好友" 訊息
-    User.findByPk(UserId)
-      .then(user => {
-        user.update({
-          LINE_USER_ID: req.body.events[0].source.userId
-        })
-          .then(async (user) => {
-            try {
-              const message = `已加入好友`
-              const LineResponse = await instance.post('/', {
-                to: user.LINE_USER_ID,
-                messages: [
-                  {
-                    "type": "text",
-                    "text": message
-                  }
-                ]
-              })
-              return
-            } catch (error) {
-              console.warn(error)
-              return
-            }
-          })
-      })
-      .catch(error => {
-        console.log(error)
-        return
-      })
-    return
-  } else if (req.body.events[0].type === 'message') {
-    // message: 沒事做
-    return
-  } else if (req.body.events[0].type === 'unfollow') {
-    // unfollow: 刪除在 User 資料表中的 LINE_USER_ID
-    User.findByPk(UserId)
-      .then(user => {
-        user.update({
-          LINE_USER_ID: ''
-        })
-          .then(() => {
-            return
-          })
-      })
-      .catch(error => {
-        console.log(error)
-        return
-      })
-    return
-  }
-  return
+  // // event 類型: follow、message、unfollow
+  // if (req.body.events[0].type === 'follow') {
+  //   // follow: 儲存 LINE_USER_ID 到 User 資料表中，傳給使用者 "已加入好友" 訊息
+  //   User.findByPk(UserId)
+  //     .then(user => {
+  //       user.update({
+  //         LINE_USER_ID: req.body.events[0].source.userId
+  //       })
+  //         .then(async (user) => {
+  //           try {
+  //             const message = `已加入好友`
+  //             const LineResponse = await instance.post('/', {
+  //               to: user.LINE_USER_ID,
+  //               messages: [
+  //                 {
+  //                   "type": "text",
+  //                   "text": message
+  //                 }
+  //               ]
+  //             })
+  //             return
+  //           } catch (error) {
+  //             console.warn(error)
+  //             return
+  //           }
+  //         })
+  //     })
+  //     .catch(error => {
+  //       console.log(error)
+  //       return
+  //     })
+  //   return
+  // } else if (req.body.events[0].type === 'message') {
+  //   // message: 沒事做
+  //   return
+  // } else if (req.body.events[0].type === 'unfollow') {
+  //   // unfollow: 刪除在 User 資料表中的 LINE_USER_ID
+  //   User.findByPk(UserId)
+  //     .then(user => {
+  //       user.update({
+  //         LINE_USER_ID: ''
+  //       })
+  //         .then(() => {
+  //           return
+  //         })
+  //     })
+  //     .catch(error => {
+  //       console.log(error)
+  //       return
+  //     })
+  //   return
+  // }
+  // return
 })
 
 router.get('/api/weather_data', async (req, res) => {
