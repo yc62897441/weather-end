@@ -254,6 +254,7 @@ async function fetchDataAndNotify() {
 
 // line webhook，處理聊天室的使用者事件，如follow、unfollow、message
 router.post('/api/line_webhook', async (req, res) => {
+  return
   try {
     let LINE_USER_ID = req.body.events[0].source.userId
 
