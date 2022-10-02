@@ -276,7 +276,7 @@ router.post('/api/line_webhook', async (req, res) => {
         break
       case 'unfollow':
         // unfollow: 刪除在 User 資料表中的 LINE_USER_ID
-        message = '退訂成功'
+        // message = '退訂成功'
         User.findOne({ where: { LINE_USER_ID: LINE_USER_ID } })
           .then(user => {
             if (user) {
@@ -288,7 +288,7 @@ router.post('/api/line_webhook', async (req, res) => {
             console.log(error)
             return
           })
-        break
+        return
       case 'message':
         message = '您好~'
         break
