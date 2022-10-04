@@ -40,7 +40,7 @@ const instance = axios.create({
     "Content-Type": "application/json",
   },
 })
-// 對照表
+// 氣象局 array 資料中各山岳的 parameterValue ID 與在 array 的 Index 的對照表
 const id_index_table = {
   D001: 0,
   D002: 1,
@@ -194,8 +194,8 @@ const id_index_table = {
   D143: 149,
   D144: 150
 }
-// 定時器
-// const clock = setInterval(fetchDataAndNotify, 5000)
+// 定時器。定時向使用者傳送天氣資訊 LINE 訊息
+const clock = setInterval(fetchDataAndNotify, 60000)
 async function fetchDataAndNotify() {
   try {
     // 抓取中央氣象局資料
@@ -254,7 +254,6 @@ async function fetchDataAndNotify() {
 
 // line webhook，處理聊天室的使用者事件，如follow、unfollow、message
 router.post('/api/line_webhook', async (req, res) => {
-  return
   try {
     let LINE_USER_ID = req.body.events[0].source.userId
 
@@ -295,6 +294,8 @@ router.post('/api/line_webhook', async (req, res) => {
         break
     }
 
+    // 不知為何，每隔約 1 分鐘就會收到一次 follow、unfollow 事件；所以先關到後續處理
+    return
     const LineResponse = await instance.post('/', {
       to: LINE_USER_ID,
       messages: [
@@ -309,74 +310,6 @@ router.post('/api/line_webhook', async (req, res) => {
     console.log(error)
     return
   }
-  // return
-
-  // let UserId = req.user.id
-
-  // // 設定 Line business messages axios
-  // const LINE_CHANNEL_TOKEN = process.env.LINE_CHANNEL_TOKEN
-  // const instance = axios.create({
-  //   baseURL: 'https://api.line.me/v2/bot/message/push',
-  //   timeout: 1000,
-  //   headers: {
-  //     Authorization: `Bearer ${LINE_CHANNEL_TOKEN}`,
-  //     "Content-Type": "application/json",
-  //   },
-  // })
-
-  // // event 類型: follow、message、unfollow
-  // if (req.body.events[0].type === 'follow') {
-  //   // follow: 儲存 LINE_USER_ID 到 User 資料表中，傳給使用者 "已加入好友" 訊息
-  //   User.findByPk(UserId)
-  //     .then(user => {
-  //       user.update({
-  //         LINE_USER_ID: req.body.events[0].source.userId
-  //       })
-  //         .then(async (user) => {
-  //           try {
-  //             const message = `已加入好友`
-  //             const LineResponse = await instance.post('/', {
-  //               to: user.LINE_USER_ID,
-  //               messages: [
-  //                 {
-  //                   "type": "text",
-  //                   "text": message
-  //                 }
-  //               ]
-  //             })
-  //             return
-  //           } catch (error) {
-  //             console.warn(error)
-  //             return
-  //           }
-  //         })
-  //     })
-  //     .catch(error => {
-  //       console.log(error)
-  //       return
-  //     })
-  //   return
-  // } else if (req.body.events[0].type === 'message') {
-  //   // message: 沒事做
-  //   return
-  // } else if (req.body.events[0].type === 'unfollow') {
-  //   // unfollow: 刪除在 User 資料表中的 LINE_USER_ID
-  //   User.findByPk(UserId)
-  //     .then(user => {
-  //       user.update({
-  //         LINE_USER_ID: ''
-  //       })
-  //         .then(() => {
-  //           return
-  //         })
-  //     })
-  //     .catch(error => {
-  //       console.log(error)
-  //       return
-  //     })
-  //   return
-  // }
-  // return
 })
 
 router.get('/api/weather_data', async (req, res) => {
@@ -573,10 +506,11 @@ router.post('/api/users/offNotify', authenticated, (req, res) => {
     })
 })
 
-// Line Login 把資料發回來
+// Line Login Platform 把資料發回來，取得 query.code、query.state
 router.get('/api/auth/line/callback', async (req, res) => {
   try {
     if (req.query) {
+      // 透過 query.code (authorization code) 向 Line platform request 使用者資料(line user)
       if (req.query.state && req.query.code) {
         const getLineUserInfoResult = await getLineUserInfo(req.query.code, req.query.state.trim())
       }
@@ -594,10 +528,7 @@ router.get('/api/auth/line/callback', async (req, res) => {
 
 async function getLineUserInfo(code, state) {
   try {
-    // 先註解起來：開發檢視用，建立處理訊息，傳送給自己的 LINE 看各階段處理狀況、資料取得情況
-    // let message = 'getLineUserInfo \n'
-
-    // 透過 code (authorization code) 向 Line platform request 使用者資料(line user)
+    // 透過 query.code (authorization code) 向 Line platform request 使用者資料(line user)
     const data = {
       grant_type: 'authorization_code',
       code: code.trim(),
@@ -627,15 +558,10 @@ async function getLineUserInfo(code, state) {
         user.update({
           LINE_USER_ID: decoded.sub
         })
-        // message = message + `user.account: ${user.account} \n`
-        // message = message + `user.LINE_USER_ID: ${user.LINE_USER_ID} \n`
-        // sendLine(message)
         return 'DONE: databaseResult'
       })
       .catch(async (error) => {
         console.log(error)
-        // message = message + `User.findOne Error \n`
-        // sendLine(message)
         return 'ERROR: databaseResult'
       })
     return databaseResult
@@ -643,22 +569,5 @@ async function getLineUserInfo(code, state) {
     console.log(error)
   }
 }
-
-// 先註解起來：開發檢視用，建立處理訊息，傳送給自己的 LINE 看各階段處理狀況、資料取得情況
-// async function sendLine(message) {
-//   try {
-//     const LINE_USER_ID = process.env.LINE_USER_ID
-//     const LineResponse = await instance.post('/', {
-//       to: LINE_USER_ID,
-//       messages: [{
-//         "type": "text",
-//         "text": `${message}`
-//       }]
-//     })
-//     return 'DONE: sendLine'
-//   } catch (error) {
-//     console.log(error)
-//   }
-// }
 
 module.exports = router
