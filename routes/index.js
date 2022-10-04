@@ -195,7 +195,7 @@ const id_index_table = {
   D144: 150
 }
 // 定時器。定時向使用者傳送天氣資訊 LINE 訊息
-const clock = setInterval(fetchDataAndNotify, 60000)
+// const clock = setInterval(fetchDataAndNotify, 60000)
 async function fetchDataAndNotify() {
   try {
     // 抓取中央氣象局資料
