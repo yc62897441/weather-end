@@ -1,6 +1,8 @@
 const express = require('express')
 const router = express.Router()
 
+const moment = require('moment')
+
 const axios = require('axios')
 let CWBAuthorization = process.env.CWBAuthorization
 let CWBbaseURL = 'https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/'
@@ -195,12 +197,26 @@ const id_index_table = {
   D144: 150
 }
 // 定時器。定時向使用者傳送天氣資訊 LINE 訊息
-// const clock = setInterval(fetchDataAndNotify, 60000)
+const clock = setInterval(fetchDataAndNotify, 5000)
 async function fetchDataAndNotify() {
   try {
     // 抓取中央氣象局資料
     let requestURL = `${CWBbaseURL}F-B0053-035?Authorization=${CWBAuthorization}&format=JSON`
     const response = await axios.get(requestURL)
+
+    // 找出未來中最接近現在時間的一筆預報的時間點
+    // 因為例如在 10/1 10:28 去撈每三小時的天氣資料，回傳的資料可能是從 10/1 06:00、10/1 09:00、10/1 12:00..開始排序，所以要找到未來中最接近現在時間的一筆預報的時間點，即 10/1 12:00 這筆資料在 time array 中的 Index。
+    let timeIndex = 0
+    const nowDate = Date.now()
+    for (let i = 0; i < response.data.cwbopendata.dataset.locations.location[0].weatherElement[0].time.length; i++) {
+      if (nowDate > Date.parse(response.data.cwbopendata.dataset.locations.location[0].weatherElement[0].time[i].dataTime)) {
+        timeIndex++
+      } else {
+        break
+      }
+    }
+    // 該筆預報的時間，如 2022-10-04 12:00
+    let dt = response.data.cwbopendata.dataset.locations.location[0].weatherElement[0].time[timeIndex].dataTime.slice(0, 10) + ' ' + response.data.cwbopendata.dataset.locations.location[0].weatherElement[0].time[timeIndex].dataTime.slice(11, 16)
 
     // 找出所有有開啟的通知設定
     UserNotification.findAll({
@@ -215,11 +231,11 @@ async function fetchDataAndNotify() {
             // 用 item.MountainId 從 id_index_table 找出對應的 mountainIndex；判斷 location[mountainIndex] 的天氣狀況是否要傳送訊息
             const mountainIndex = id_index_table[item.MountainId]
             const LINE_USER_ID = item.User.LINE_USER_ID
-            if (Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[3].time[0].elementValue.value) >= item.rainrate || Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[0].time[0].elementValue.value) >= item.temperature || Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[8].time[0].elementValue.value) >= item.apparentTemperature) {
+            if (Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[3].time[timeIndex].elementValue.value) >= item.rainrate ||
+              Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[0].time[timeIndex].elementValue.value) >= item.temperature ||
+              Number(response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[8].time[timeIndex].elementValue.value) >= item.apparentTemperature) {
               // 製作訊息 eg.小霸尖山 午後短暫雷陣雨。降雨機率 30%。溫度攝氏14度。寒冷。西北風 平均風速<= 1級(每秒2公尺)。相對濕度72%。
               let message = `${response.data.cwbopendata.dataset.locations.location[mountainIndex].locationName} \n${response.data.cwbopendata.dataset.locations.location[mountainIndex].weatherElement[10].time[0].elementValue.value}`
-
-              let dt = new Date()
 
               // 傳送訊息
               // 解決，如果 LINE_USER_ID 為空，或是 [UnhandledPromiseRejection: This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). The promise rejected with the reason "AxiosError: Request failed with status code 400".] { code: 'ERR_UNHANDLED_REJECTION' }
