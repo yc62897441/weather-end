@@ -586,4 +586,25 @@ async function getLineUserInfo(code, state) {
   }
 }
 
+router.post('/api/database', (req, res) => {
+  // console.log(req.body.checkDatabasePassword)
+  // return res.json({ status: 'success', message: 'success' })
+
+  const checkDatabasePassword = process.env.checkDatabasePassword
+  if (checkDatabasePassword !== req.body.checkDatabasePassword) {
+    return res.json({ status: 'error', message: 'Wrong checkDatabasePassword' })
+  }
+
+  User.findAll({ raw: true, nest: true })
+    .then(users => {
+      UserNotification.findAll({ raw: true, nest: true })
+        .then(userNotifications => {
+          return res.json({ status: 'success', message: 'success', users_data: users, userNotifications_data: userNotifications })
+        })
+    })
+    .catch(error => {
+      return res.json({ status: 'error', message: 'Error database' })
+    })
+})
+
 module.exports = router
