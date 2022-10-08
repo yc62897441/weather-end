@@ -1,8 +1,6 @@
 const express = require('express')
 const router = express.Router()
 
-const moment = require('moment')
-
 const axios = require('axios')
 let CWBAuthorization = process.env.CWBAuthorization
 let CWBbaseURL = 'https://opendata.cwb.gov.tw/fileapi/v1/opendataapi/'
@@ -21,7 +19,7 @@ const UserNotification = db.UserNotification
 
 // signin 簽發 token
 const jwt = require('jsonwebtoken')
-const JWT_SECRET = 'secret'
+const JWT_SECRET = process.env.JWT_SECRET
 
 // 進入其他需驗證路由的驗證
 const passport = require('../config/passport')
@@ -196,8 +194,8 @@ const id_index_table = {
   D143: 149,
   D144: 150
 }
-// 定時器。定時向使用者傳送天氣資訊 LINE 訊息  // 暫定 12 小時發送一次
-const clock = setInterval(fetchDataAndNotify, 43200000)
+// 定時器。定時向使用者傳送天氣資訊 LINE 訊息  // 暫定 6 小時發送一次
+const clock = setInterval(fetchDataAndNotify, 21600000)
 async function fetchDataAndNotify() {
   try {
     // 抓取中央氣象局資料
@@ -328,6 +326,7 @@ router.post('/api/line_webhook', async (req, res) => {
   }
 })
 
+// 取得氣象局資料，回傳給前端
 router.get('/api/weather_data', async (req, res) => {
   try {
     let requestURL = `${CWBbaseURL}${req.query.dataCategory}?Authorization=${CWBAuthorization}&format=${req.query.dataType}`
@@ -343,6 +342,7 @@ router.get('/api/weather_data', async (req, res) => {
   }
 })
 
+// 註冊
 router.post('/api/users/signup', (req, res) => {
   // 取得前端表單資料
   const { account, password } = req.body
@@ -372,6 +372,8 @@ router.post('/api/users/signup', (req, res) => {
     })
 })
 
+
+// 登入
 router.post('/api/users/signin', (req, res) => {
   // 取得前端表單資料
   const { account, password } = req.body
@@ -423,6 +425,7 @@ router.get('/api/get_current_user', authenticated, (req, res) => {
   })
 })
 
+// 取得加入蒐藏的山岳s
 router.get('/api/users/userSave', authenticated, (req, res) => {
   const userId = req.user.id
   UserSave.findAll({ where: { UserId: userId } })
@@ -435,6 +438,7 @@ router.get('/api/users/userSave', authenticated, (req, res) => {
     })
 })
 
+// 加入蒐藏
 router.post('/api/users/addToUserSave', authenticated, (req, res) => {
   UserSave.create({
     UserId: req.user.id,
@@ -449,6 +453,7 @@ router.post('/api/users/addToUserSave', authenticated, (req, res) => {
     })
 })
 
+// 刪除蒐藏
 router.post('/api/users/removeFromUserSave', authenticated, (req, res) => {
   UserSave.findOne({
     where: {
@@ -468,6 +473,7 @@ router.post('/api/users/removeFromUserSave', authenticated, (req, res) => {
     })
 })
 
+// 取得開啟LINE通知的山岳
 router.get('/api/users/notification', authenticated, (req, res) => {
   UserNotification.findOne({ where: { UserId: req.user.id } })
     .then(userNotification => {
@@ -479,6 +485,7 @@ router.get('/api/users/notification', authenticated, (req, res) => {
     })
 })
 
+// 開啟LINE通知
 router.post('/api/users/onNotify', authenticated, (req, res) => {
   // 如果沒有開啟通知，則新增；如果已有開啟通知，則更新新的監控地點、條件
   UserNotification.findOne({ where: { UserId: req.user.id } })
@@ -509,6 +516,7 @@ router.post('/api/users/onNotify', authenticated, (req, res) => {
     })
 })
 
+// 關閉LINE通知
 router.post('/api/users/offNotify', authenticated, (req, res) => {
   UserNotification.findOne({ where: { UserId: req.user.id, MountainId: req.body.MountainId } })
     .then(userNotification => {
@@ -586,10 +594,8 @@ async function getLineUserInfo(code, state) {
   }
 }
 
+// 使用postman查看資料庫的資料
 router.post('/api/database', (req, res) => {
-  // console.log(req.body.checkDatabasePassword)
-  // return res.json({ status: 'success', message: 'success' })
-
   const checkDatabasePassword = process.env.checkDatabasePassword
   if (checkDatabasePassword !== req.body.checkDatabasePassword) {
     return res.json({ status: 'error', message: 'Wrong checkDatabasePassword' })
