@@ -390,9 +390,9 @@ router.post('/api/users/signin', (req, res) => {
         return res.json({ status: 'error', message: '密碼錯誤' })
       }
 
-      // 簽發token
+      // 簽發token，設定 token 過期時效
       const payload = { id: user.id }
-      const token = jwt.sign(payload, JWT_SECRET)
+      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: 86400 })
 
       // 只回傳必要資訊，其他如 password、createdAt 就不需要回傳到前端
       user = {
